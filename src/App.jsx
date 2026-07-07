@@ -1659,8 +1659,7 @@ export default function App() {
                 <path d="M6 14h1M6 17h1M17 8h1M17 11h1M17 14h1" stroke={SF_BLUE} strokeWidth="1.4" strokeLinecap="round"/>
               </svg>
             </div>
-            <div style={{fontSize:22,fontWeight:700,color:SF_NAVY,marginBottom:8}}>Business Units</div>
-            <div style={{fontSize:14,color:SF_SUBTLE,fontWeight:600,maxWidth:420}}>Coming soon — allocate space and seats across business units.</div>
+            <div style={{fontSize:22,fontWeight:700,color:SF_NAVY}}>Coming Soon</div>
           </div>
         )}
 
