@@ -805,7 +805,18 @@ export default function App() {
           {/* Logo + title */}
           <div style={{display:"flex",alignItems:"center",gap:12}}>
             <div style={{width:32,height:32,background:SF_BLUE,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-              <span style={{color:"#fff",fontSize:16,fontWeight:700}}>⬡</span>
+              {/* Office tower with window grid */}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Salesforce Workplace Design">
+                <path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" stroke="#fff" strokeWidth="1.6" strokeLinejoin="round"/>
+                <path d="M3 21h18" stroke="#fff" strokeWidth="1.6" strokeLinecap="round"/>
+                <rect x="9" y="6" width="2" height="2" rx="0.4" fill="#fff"/>
+                <rect x="13" y="6" width="2" height="2" rx="0.4" fill="#fff"/>
+                <rect x="9" y="10" width="2" height="2" rx="0.4" fill="#fff"/>
+                <rect x="13" y="10" width="2" height="2" rx="0.4" fill="#fff"/>
+                <rect x="9" y="14" width="2" height="2" rx="0.4" fill="#fff"/>
+                <rect x="13" y="14" width="2" height="2" rx="0.4" fill="#fff"/>
+                <path d="M11 21v-3h2v3" stroke="#fff" strokeWidth="1.4" strokeLinejoin="round"/>
+              </svg>
             </div>
             <div>
               <div style={{fontSize:15,letterSpacing:"0.14em",color:SF_CLOUD,fontWeight:600,textTransform:"uppercase",lineHeight:1.1}}>Salesforce Workplace Design</div>
