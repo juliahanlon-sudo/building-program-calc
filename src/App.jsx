@@ -82,12 +82,16 @@ const DEFAULT_TIERS = [
     superAlloc:{ workspace:0.65, amenity:0.25, support:0.10 },
     wsAlloc:{ indiv:0.45, enclosed:0.20, wpspec:0.10, open:0.25 },
     amAlloc:{ me:0.30, specialty:0.35, hospitality:0.35 },
+    // Training rooms per 1,000 capacity seats — scales with building size.
+    // These are M&E capacity seats (weighted ×0.75), so auto-fit balances desks around them.
+    trainingPer1000:{ training_l:1, training_m:1, training_s:1 },
     densityMin:85, densityMax:110 },
   { id:"T2", label:"Tier 2 — Towers (Customer Hub)",
     description:"Long-term lease with Salesforce Standard Design, less dedicated amenity — prioritisation on multi-purpose spaces for internal/customer needs. Examples: Chicago, Sydney.",
     superAlloc:{ workspace:0.70, amenity:0.20, support:0.10 },
     wsAlloc:{ indiv:0.50, enclosed:0.22, wpspec:0.08, open:0.20 },
     amAlloc:{ me:0.35, specialty:0.40, hospitality:0.25 },
+    trainingPer1000:{ training_m:1, training_s:1 },
     densityMin:85, densityMax:105 },
   { id:"T3", label:"Tier 3 — Hubs (Employee Hub)",
     description:"Mid-term lease, with more cost-efficient buildout and services. Flexible gathering spaces. Examples: Hyderabad.",
@@ -254,6 +258,9 @@ const SPACE_GROUPS = [
 ];
 
 const WORKSPACE_IDS = ["indiv","enclosed","wpspec","open"];
+// M&E training rooms that tiers can seed via trainingPer1000. When a tier seeds
+// them, at least one of each is guaranteed even for a small plan.
+const TRAINING_IDS = ["training_l","training_m","training_s"];
 
 function allSpaces() {
   return SPACE_GROUPS.flatMap(g => g.spaces.map(sp => ({...sp, groupId:g.id, superGroup:g.superGroup})));
@@ -266,8 +273,12 @@ function computeRatios(tierId, regionId, tiers=DEFAULT_TIERS) {
     const gAlloc = groupAlloc(tier, g.id);
     g.spaces.forEach(sp => {
       const mult = sp.regionMult?.[regionId] ?? 1.0;
+      const trainingN = tier?.trainingPer1000?.[sp.id];
       if (sp.isDeskPct)      r[sp.id] = Math.min(1, Math.max(0, sp.baseRatio * mult));
       else if (sp.isRoomType) r[sp.id] = Math.max(1, Math.round(sp.roomRatio / mult));
+      // Training rooms seeded per-tier as "rooms per 1,000 capacity seats" — the
+      // planRef × ratio count math then yields that many rooms as the plan scales.
+      else if (trainingN)     r[sp.id] = (trainingN / 1000) * mult;
       else                    r[sp.id] = gAlloc * sp.baseRatio * mult;
     });
   });
@@ -698,7 +709,10 @@ export default function App() {
     const allSp = allSpaces();
     const pass1 = allSp.map(sp=>{
       if (sp.isDeskPct||sp.isRoomType) return {...sp,count:0,spaces:0,sf:sfOver[sp.id]??sp.sf,totalSf:0,rooms:0};
-      const spaces = sp.fixedCount ? (fixedExcluded.has(sp.id) ? 0 : sp.fixedCount) : Math.round(planRef*(ratios[sp.id]??0));
+      const rawR = ratios[sp.id]??0;
+      let spaces = sp.fixedCount ? (fixedExcluded.has(sp.id) ? 0 : sp.fixedCount) : Math.round(planRef*rawR);
+      // Seeded training rooms: guarantee at least one so small T1/T2 plans still have M&E.
+      if(TRAINING_IDS.includes(sp.id) && rawR>0 && spaces<1) spaces = 1;
       const seatsPer = sp.seatsPerSpace ? (spaceSeats[sp.id] ?? sp.seatsPerSpace) : 1;
       const count  = sp.seatsPerSpace ? spaces * seatsPer : spaces;
       const sf = sfOver[sp.id]??sp.sf;
@@ -755,7 +769,9 @@ export default function App() {
     const simulateCap = (dPct)=>{
       const p1 = allSp.map(sp=>{
         if(sp.isDeskPct||sp.isRoomType) return {...sp,spaces:0,count:0};
-        const spaces = sp.fixedCount ? (fixedExcluded.has(sp.id)?0:sp.fixedCount) : Math.round(pRef*(ratios[sp.id]??0));
+        const rawR = ratios[sp.id]??0;
+        let spaces = sp.fixedCount ? (fixedExcluded.has(sp.id)?0:sp.fixedCount) : Math.round(pRef*rawR);
+        if(TRAINING_IDS.includes(sp.id) && rawR>0 && spaces<1) spaces = 1;
         const seatsPer = spaceSeats[sp.id] ?? sp.seatsPerSpace ?? 1;
         const count = sp.seatsPerSpace ? spaces*seatsPer : spaces;
         return {...sp,spaces,count};
