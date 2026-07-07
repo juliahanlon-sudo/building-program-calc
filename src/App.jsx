@@ -1319,8 +1319,8 @@ export default function App() {
                 <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"22px",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
                   <div style={{fontSize:12,fontWeight:800,color:SF_NAVY,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:4}}>Space Group Breakdown</div>
                   <div style={{fontSize:11,color:"#888",marginBottom:16}}>% of {bpcSfBase.toUpperCase()} · total = {bpcBaseSF.toLocaleString()} SF</div>
-                  <BpcGroupBar label="Workspace" sf={bpcRes.wsSF}  pct={bpcTierAlloc.workspace} color={SF_BLUE}    baseSF={bpcBaseSF}/>
-                  {hasAmenity && <BpcGroupBar label="Amenity" sf={bpcRes.amSF} pct={bpcTierAlloc.amenity} color="#04A6A2" baseSF={bpcBaseSF}/>}
+                  <BpcGroupBar label="Workspace" sf={bpcRes.wsSF}  pct={bpcTierAlloc.workspace} color="#078744"  baseSF={bpcBaseSF}/>
+                  {hasAmenity && <BpcGroupBar label="Amenity" sf={bpcRes.amSF} pct={bpcTierAlloc.amenity} color="#ff8000" baseSF={bpcBaseSF}/>}
                   <BpcGroupBar label="Support"   sf={bpcRes.supSF} pct={bpcTierAlloc.support}   color="#94A3B8"  baseSF={bpcBaseSF}/>
                   <div style={{borderTop:"1px solid #eee",marginTop:8,paddingTop:8,display:"flex",justifyContent:"space-between",fontSize:12,fontWeight:700,color:SF_NAVY}}>
                     <span>Total</span>
