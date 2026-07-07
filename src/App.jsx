@@ -1182,7 +1182,7 @@ export default function App() {
                   const parts = [];
                   if(summary.wsCap>0)   parts.push(`${summary.wsCap} ws`);
                   if(summary.openCap>0) parts.push(`${summary.openCap} open`);
-                  if(summary.meCap>0)   parts.push(`${summary.meCap} M&E (×0.75)`);
+                  if(summary.meCap>0)   parts.push(`${summary.meCap} M&E`);
                   return parts.length>0 ? parts.join(" + ") : `Target ${targetCapMin}–${targetCapMax}`;
                 })()} subColor={dsc}/>
                 <div style={{width:1,background:"#e0e0e0",alignSelf:"stretch",margin:"0 12px"}}/>
