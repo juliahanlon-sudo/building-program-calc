@@ -419,7 +419,7 @@ function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,base
   );
 }
 
-function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSeats,fixedExcluded,toggleFixed}) {
+function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSeats,fixedExcluded,toggleFixed,capShareDenom}) {
   const res      = results.find(r=>r.id===sp.id);
   const base     = baseRatios[sp.id] ?? 0;
   const modified = Math.abs((ratios[sp.id]??0) - base) > 0.0005;
@@ -428,6 +428,12 @@ function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSea
   const spaces = res?.spaces ?? res?.count ?? 0;
   const seats  = res?.count ?? 0;
   const isNone = sp.type === "none";
+  // % is only meaningful for capacity spaces in Individual Work / Open Collaboration —
+  // it shows each space's share of total workspace capacity seats (column sums to 100%).
+  const groupId  = res?.groupId;
+  const showPct  = sp.type==="capacity" && (groupId==="indiv"||groupId==="open");
+  const wSeats   = Math.round((res?.count??0)*(sp.seatWeight??1));
+  const sharePct = capShareDenom>0 ? (wSeats/capShareDenom)*100 : 0;
   return (
     <div style={{display:"flex",alignItems:"center",padding:"7px 20px",gap:12,borderBottom:"1px solid #f5f5f5",background:"transparent",transition:"background 0.5s"}}>
       {/* Label */}
@@ -469,8 +475,8 @@ function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSea
               value={ratios[sp.id]??(sp.isDeskPct?0.90:0)}
               onChange={e=>setRatios(r=>({...r,[sp.id]:parseFloat(e.target.value)}))}
               style={{flex:1,accentColor:SF_BLUE,cursor:"pointer"}}/>
-            <span style={{fontSize:12,width:COL.pct,textAlign:"right",fontVariantNumeric:"tabular-nums",color:modified?SF_BLUE:SF_GRAY_700,fontWeight:modified?700:600,flexShrink:0}}>
-              {((ratios[sp.id]??0)*100).toFixed(sp.isDeskPct?0:1)}%
+            <span style={{fontSize:12,width:COL.pct,textAlign:"right",fontVariantNumeric:"tabular-nums",color:showPct?SF_NAVY:SF_GRAY_700,fontWeight:showPct?700:600,flexShrink:0}}>
+              {showPct ? `${sharePct.toFixed(1)}%` : ""}
             </span>
           </div>
         )}
@@ -1078,7 +1084,7 @@ export default function App() {
                           {g.spaces.map(sp=>
                             rowType==="room"
                               ? <RoomRow key={sp.id} sp={sp} results={results} ratios={ratios} setRatios={setRatios} roomSeats={roomSeats} setRoomSeats={setRoomSeats} locked={lockedRooms} baseRatios={baseRatios}/>
-                              : <SpaceRow key={sp.id} sp={sp} results={results} ratios={ratios} baseRatios={baseRatios} setRatios={setRatios} spaceSeats={spaceSeats} setSpaceSeats={setSpaceSeats} fixedExcluded={fixedExcluded} toggleFixed={toggleFixed}/>
+                              : <SpaceRow key={sp.id} sp={sp} results={results} ratios={ratios} baseRatios={baseRatios} setRatios={setRatios} spaceSeats={spaceSeats} setSpaceSeats={setSpaceSeats} fixedExcluded={fixedExcluded} toggleFixed={toggleFixed} capShareDenom={summary.wsCap+summary.openCap}/>
                           )}
                           </>}
                         </div>
