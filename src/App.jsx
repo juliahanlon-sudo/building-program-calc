@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import ScenarioManager from "./ScenarioManager.jsx";
 
 // ── Salesforce Digital Palette ────────────────────────────────────────────────
@@ -681,11 +681,11 @@ export default function App() {
   },[results,workspaceAsf,densityMin,densityMax,inputMode,pinnedSeats]);
 
   // ── Auto-fit ───────────────────────────────────────────────────────────
-  // Solve the desk % automatically so capacity seats land inside the target
-  // density range (aims at the midpoint). Re-runs whenever ASF / tier / region /
-  // density or the hand-tuned non-desk ratios change, so the density gauge reads
-  // OK by default. Every other ratio stays editable; only "desks" is balanced.
-  useEffect(()=>{
+  // Solve the desk % so capacity seats land inside the target density range
+  // (aims at the midpoint). Manual only — triggered by the "Auto-fit to range"
+  // button — so hand-tuned counts are never silently overwritten. Only the
+  // "desks" ratio is balanced; every other space stays exactly as set.
+  function handleAutoFit(){
     if(workspaceAsf<=0||densityMin<=0||densityMax<=0) return;
     const allSp = allSpaces();
     const pRef  = planRef;
@@ -713,11 +713,8 @@ export default function App() {
     let lo=0.50, hi=0.99;
     for(let i=0;i<60;i++){ const mid=(lo+hi)/2; if(simulateCap(mid)>exactCapTarget) hi=mid; else lo=mid; }
     const solved = parseFloat(((lo+hi)/2).toFixed(4));
-    // Only write when it actually changed — prevents a setState feedback loop.
-    if(Math.abs((ratios["desks"]??0)-solved) > 0.0005){
-      setRatios(r=>({...r,desks:solved}));
-    }
-  },[workspaceAsf,densityMin,densityMax,planRef,ratios,spaceSeats,fixedExcluded]);
+    setRatios(r=>({...r,desks:solved}));
+  }
 
   const baseRatios = useMemo(()=>computeRatios(tierId,region),[tierId,region]);
   const dsc = sColor(summary.dStatus);
@@ -889,6 +886,12 @@ export default function App() {
                     <div style={{fontSize:11,color:"#666"}}>{sLabel(summary.dStatus)} · Target {densityMin}–{densityMax} SF/seat</div>
                   </div>
                 </div>
+                {summary.cap>0 && summary.dStatus!=="ok" && (
+                  <button onClick={handleAutoFit}
+                    style={{marginTop:8,width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"9px 14px",borderRadius:8,border:"none",background:SF_BLUE,color:"#fff",cursor:"pointer",fontSize:12,fontWeight:700,boxShadow:"0 2px 8px rgba(1,118,211,0.35)"}}>
+                    ⇅ Auto-fit desks to range
+                  </button>
+                )}
               </Panel>
             </div>
 
