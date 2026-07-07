@@ -801,7 +801,7 @@ export default function App() {
       <style>{`@media print{.no-print{display:none!important}.print-only{display:block!important}body{background:#fff}}`}</style>
       {/* Header */}
       <div className="no-print" style={{background:SF_NAVY,position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 12px rgba(0,0,30,0.25)"}}>
-        <div style={{maxWidth:1400,margin:"0 auto",padding:"0 24px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,height:56}}>
+        <div style={{maxWidth:1400,margin:"0 auto",padding:"16px 24px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,minHeight:56}}>
           {/* Logo + title */}
           <div style={{display:"flex",alignItems:"center",gap:12}}>
             <div style={{width:32,height:32,background:SF_BLUE,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
