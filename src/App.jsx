@@ -387,7 +387,7 @@ function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,base
   );
 }
 
-function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSeats,fixedExcluded,toggleFixed,aiChanged}) {
+function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSeats,fixedExcluded,toggleFixed}) {
   const res      = results.find(r=>r.id===sp.id);
   const base     = baseRatios[sp.id] ?? 0;
   const modified = Math.abs((ratios[sp.id]??0) - base) > 0.0005;
@@ -397,7 +397,7 @@ function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSea
   const seats  = res?.count ?? 0;
   const isNone = sp.type === "none";
   return (
-    <div style={{display:"flex",alignItems:"center",padding:"7px 20px",gap:12,borderBottom:"1px solid #f5f5f5",background:aiChanged?"#f3f0ff":"transparent",transition:"background 0.5s"}}>
+    <div style={{display:"flex",alignItems:"center",padding:"7px 20px",gap:12,borderBottom:"1px solid #f5f5f5",background:"transparent",transition:"background 0.5s"}}>
       {/* Label */}
       <div style={{display:"flex",alignItems:"center",gap:8,flex:1,minWidth:0}}>
         <span style={{padding:"2px 7px",borderRadius:4,fontSize:10,fontWeight:600,background:bb,color:bc,flexShrink:0}}>
@@ -481,10 +481,6 @@ export default function App() {
   const toggleRoomLock = () => setLockedRooms(v => !v);
   const [compData,    setCompData]    = useState(null);  // { id -> {spaces, seats} }
   const [compName,    setCompName]    = useState("");
-  const [aiAdjusting, setAiAdjusting] = useState(false);
-  const [aiReasoning, setAiReasoning] = useState("");
-  const [aiChangedIds, setAiChangedIds] = useState(new Set());
-  const [preAiRatios, setPreAiRatios] = useState(null); // for undo
 
   // ── Building Program Calculator state ─────────────────────────────────────
   const [bpcSfBase,      setBpcSfBase]      = useState("asf");
@@ -619,137 +615,6 @@ export default function App() {
     if(d) { setSharedDensityMin(d.min); setSharedDensityMax(d.max); }
   }
 
-  async function handleAiAdjust() {
-    setAiAdjusting(true);
-    setAiReasoning("");
-    try {
-      const allSp = allSpaces();
-      const pRef = Math.round((targetCapMin + targetCapMax) / 2);
-      const densityMid = (densityMin + densityMax) / 2;
-      const exactCapTarget = Math.floor(workspaceAsf / densityMid);
-
-      // Remaining 15% of cap seats for non-desk spaces
-      const nonDeskCapTarget = Math.round(0.15 * exactCapTarget);
-
-      // Ask Claude how to split nonDeskCapTarget across touchdown + open collab
-      const prompt = `You are a Salesforce workplace design expert.
-
-CONTEXT:
-- Location: ${city||"Unknown"}, ${region}, ${TIERS.find(t=>t.id===tierId)?.label}
-- Total capacity seats target: ${exactCapTarget}
-- Desks will take 85% = ${Math.round(0.85*exactCapTarget)} seats
-- Remaining for non-desk spaces: ${nonDeskCapTarget} seats (15%)
-
-Split ${nonDeskCapTarget} seats across touchdown seats and open collab spaces.
-Open collab seats count at 0.5 weight (so 10 open collab seats = 5 cap seats).
-
-Available spaces (use a realistic mix for the tier):
-- touchdown_seat: 1 seat each, weight 1.0
-- booth: 2 seats each, weight 0.5
-- cafe_collab: 4 seats each, weight 0.5  
-- community_table: 6 seats each, weight 0.5
-
-Rules:
-- All seat counts are WEIGHTED seats contributing to the ${nonDeskCapTarget} total
-- touchdown_seat weighted seats + open_collab weighted seats must equal exactly ${nonDeskCapTarget}
-- Lean toward some touchdown seats (weight 1.0) plus 1-2 open collab types
-- Keep numbers modest and realistic for the floor size (planRef=${pRef})
-
-Respond ONLY with JSON (no markdown):
-{
-  "reasoning": "1-2 sentences",
-  "touchdown_seats": 0,
-  "open_collab": [
-    {"id": "booth", "weighted_seats": 0},
-    {"id": "cafe_collab", "weighted_seats": 0},
-    {"id": "community_table", "weighted_seats": 0}
-  ]
-}
-All weighted_seat values must sum with touchdown_seats to exactly ${nonDeskCapTarget}.`;
-
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 600,
-          messages: [{ role: "user", content: prompt }]
-        })
-      });
-
-      const data = await response.json();
-      const text = data.content?.find(b => b.type === "text")?.text ?? "";
-      const parsed = JSON.parse(text.replace(/```json|```/g,"").trim());
-
-      // ── Build new ratios: start clean, only set what we want ──
-      // Keep non-capacity ratios (room types etc), zero all capacity workspace ratios
-      const newRatios = { ...ratios };
-      // Zero all non-desk, non-room workspace capacity spaces
-      allSp.filter(sp => sp.type === "capacity" && !sp.isDeskPct && !sp.isRoomType)
-           .forEach(sp => { newRatios[sp.id] = 0; });
-
-      // Set touchdown seats: ratio = spaces/pRef, spaces = weighted_seats (weight=1)
-      const tdWeightedSeats = Math.max(0, parsed.touchdown_seats ?? 0);
-      newRatios["touchdown_seat"] = pRef > 0 ? parseFloat((tdWeightedSeats / pRef).toFixed(4)) : 0;
-
-      // Set open collab spaces: weighted_seats = spaces × seatsPerSpace × 0.5
-      // so spaces = weighted_seats / (seatsPerSpace × 0.5)
-      // ratio = spaces / pRef
-      const openCollabMap = { booth: 2, cafe_collab: 4, community_table: 6 };
-      if (Array.isArray(parsed.open_collab)) {
-        for (const item of parsed.open_collab) {
-          const seatsPer = openCollabMap[item.id] ?? 2;
-          const weightedSeats = Math.max(0, item.weighted_seats ?? 0);
-          const spaces = Math.round(weightedSeats / (seatsPer * 0.5));
-          newRatios[item.id] = pRef > 0 ? parseFloat((spaces / pRef).toFixed(4)) : 0;
-        }
-      }
-
-      // ── Solve for deskPct using simulateCap ──
-      const simulateCap = (dPct) => {
-        const p1 = allSp.map(sp => {
-          if (sp.isDeskPct || sp.isRoomType) return { ...sp, spaces: 0, count: 0 };
-          const spaces = sp.fixedCount
-            ? (fixedExcluded.has(sp.id) ? 0 : sp.fixedCount)
-            : Math.round(pRef * (newRatios[sp.id] ?? 0));
-          const seatsPer = spaceSeats[sp.id] ?? sp.seatsPerSpace ?? 1;
-          const count = sp.seatsPerSpace ? spaces * seatsPer : spaces;
-          return { ...sp, spaces, count };
-        });
-        const wsCap2 = p1
-          .filter(r => r.type === "capacity" && !r.isDeskPct && WORKSPACE_IDS.includes(r.groupId))
-          .reduce((a, r) => a + (r.spaces ?? r.count), 0);
-        const deskCount = dPct < 1 ? Math.round((dPct * wsCap2) / (1 - dPct)) : 0;
-        const p2 = p1.map(sp => sp.isDeskPct ? { ...sp, count: deskCount } : sp);
-        const capResults = p2.filter(r => r.type === "capacity");
-        const wsCapSum   = capResults.filter(r => WORKSPACE_IDS.includes(r.groupId) && r.groupId !== "open").reduce((a,r) => a + Math.round(r.count*(r.seatWeight??1)), 0);
-        const openCapSum = capResults.filter(r => r.groupId === "open").reduce((a,r) => a + Math.round(r.count*(r.seatWeight??1)), 0);
-        const meCapSum   = capResults.filter(r => r.groupId === "me").reduce((a,r) => a + Math.round(r.count*(r.seatWeight??1)), 0);
-        return wsCapSum + openCapSum + meCapSum;
-      };
-
-      // Binary search: find deskPct so simulateCap = exactCapTarget
-      let lo = 0.80, hi = 0.90;
-      for (let i = 0; i < 60; i++) {
-        const mid = (lo + hi) / 2;
-        if (simulateCap(mid) > exactCapTarget) hi = mid;
-        else lo = mid;
-      }
-      newRatios["desks"] = parseFloat(((lo + hi) / 2).toFixed(4));
-
-      setPreAiRatios({ ...ratios });
-      const changedIds = new Set(["desks", "touchdown_seat", "booth", "cafe_collab", "community_table"]);
-      setRatios(newRatios);
-      setAiChangedIds(changedIds);
-      setAiReasoning(parsed.reasoning || "");
-      setTimeout(() => setAiChangedIds(new Set()), 3000);
-    } catch (err) {
-      setAiReasoning("Could not complete adjustment — " + (err?.message || "please try again."));
-    } finally {
-      setAiAdjusting(false);
-    }
-  }
-
   // ── Derive per-floor RSF array from BPC inputs ─────────────────────────
   const bpcFloorRsfList = useMemo(()=>{
     if(bpcFloorMode==="building")      return Array(bpcFloors).fill(Math.round(bpcBuildingRSF/bpcFloors));
@@ -814,6 +679,45 @@ All weighted_seat values must sum with touchdown_seats to exactly ${nonDeskCapTa
     const actualDensity = refCap>0 ? Math.round(workspaceAsf/refCap) : 0;
     return {cap,wsCap,openCap,meCap,noncap,total:cap+noncap,asfMin:cap*densityMin,asfMax:cap*densityMax,actualDensity,dStatus:densityStatus(actualDensity,densityMax,densityMin)};
   },[results,workspaceAsf,densityMin,densityMax,inputMode,pinnedSeats]);
+
+  // ── Auto-fit ───────────────────────────────────────────────────────────
+  // Solve the desk % automatically so capacity seats land inside the target
+  // density range (aims at the midpoint). Re-runs whenever ASF / tier / region /
+  // density or the hand-tuned non-desk ratios change, so the density gauge reads
+  // OK by default. Every other ratio stays editable; only "desks" is balanced.
+  useEffect(()=>{
+    if(workspaceAsf<=0||densityMin<=0||densityMax<=0) return;
+    const allSp = allSpaces();
+    const pRef  = planRef;
+    const densityMid = (densityMin+densityMax)/2;
+    const exactCapTarget = Math.floor(workspaceAsf/densityMid);
+    // capacity seats produced for a given desk %, mirroring the summary math
+    const simulateCap = (dPct)=>{
+      const p1 = allSp.map(sp=>{
+        if(sp.isDeskPct||sp.isRoomType) return {...sp,spaces:0,count:0};
+        const spaces = sp.fixedCount ? (fixedExcluded.has(sp.id)?0:sp.fixedCount) : Math.round(pRef*(ratios[sp.id]??0));
+        const seatsPer = spaceSeats[sp.id] ?? sp.seatsPerSpace ?? 1;
+        const count = sp.seatsPerSpace ? spaces*seatsPer : spaces;
+        return {...sp,spaces,count};
+      });
+      const wsCap2 = p1.filter(r=>r.type==="capacity"&&!r.isDeskPct&&WORKSPACE_IDS.includes(r.groupId)).reduce((a,r)=>a+(r.spaces??r.count),0);
+      const deskCount = dPct<1 ? Math.round((dPct*wsCap2)/(1-dPct)) : 0;
+      const p2 = p1.map(sp=>sp.isDeskPct?{...sp,count:deskCount}:sp);
+      const capR = p2.filter(r=>r.type==="capacity");
+      const wsCapSum   = capR.filter(r=>WORKSPACE_IDS.includes(r.groupId)&&r.groupId!=="open").reduce((a,r)=>a+Math.round(r.count*(r.seatWeight??1)),0);
+      const openCapSum = capR.filter(r=>r.groupId==="open").reduce((a,r)=>a+Math.round(r.count*(r.seatWeight??1)),0);
+      const meCapSum   = capR.filter(r=>r.groupId==="me").reduce((a,r)=>a+Math.round(r.count*(r.seatWeight??1)),0);
+      return wsCapSum+openCapSum+meCapSum;
+    };
+    // Binary search the desk % that hits exactCapTarget.
+    let lo=0.50, hi=0.99;
+    for(let i=0;i<60;i++){ const mid=(lo+hi)/2; if(simulateCap(mid)>exactCapTarget) hi=mid; else lo=mid; }
+    const solved = parseFloat(((lo+hi)/2).toFixed(4));
+    // Only write when it actually changed — prevents a setState feedback loop.
+    if(Math.abs((ratios["desks"]??0)-solved) > 0.0005){
+      setRatios(r=>({...r,desks:solved}));
+    }
+  },[workspaceAsf,densityMin,densityMax,planRef,ratios,spaceSeats,fixedExcluded]);
 
   const baseRatios = useMemo(()=>computeRatios(tierId,region),[tierId,region]);
   const dsc = sColor(summary.dStatus);
@@ -1006,41 +910,7 @@ All weighted_seat values must sum with touchdown_seats to exactly ${nonDeskCapTa
                 <SeatStat label="SF / Cap Seat" value={summary.actualDensity?`${summary.actualDensity} SF`:"—"} color={dsc} sub={sLabel(summary.dStatus)} subColor={dsc}/>
                 <div style={{width:1,background:"#e0e0e0",alignSelf:"stretch",margin:"0 12px"}}/>
                 <SeatStat label="Workspace ASF" value={workspaceAsf>=1000?`${(workspaceAsf/1000).toFixed(0)}k`:workspaceAsf} color="#F4A460" sub={`${Math.round(wsFrac*100)}% of total`}/>
-                {summary.dStatus !== "ok" && (
-                  <>
-                    <div style={{width:1,background:"#e0e0e0",alignSelf:"stretch",margin:"0 12px"}}/>
-                    <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}>
-                      <div style={{display:"flex",gap:6}}>
-                        <button onClick={handleAiAdjust} disabled={aiAdjusting}
-                          style={{display:"flex",alignItems:"center",gap:6,padding:"8px 16px",borderRadius:8,border:"none",
-                            background:aiAdjusting?"#f0f0f0":`linear-gradient(135deg, ${SF_BLUE}, #9C27B0)`,
-                            color:aiAdjusting?"#aaa":"#fff",cursor:aiAdjusting?"not-allowed":"pointer",
-                            fontSize:12,fontWeight:700,whiteSpace:"nowrap",boxShadow:aiAdjusting?"none":"0 2px 8px rgba(1,118,211,0.4)"}}>
-                          {aiAdjusting ? "⏳ Adjusting…" : "✨ AI Auto-adjust"}
-                        </button>
-                        {preAiRatios && !aiAdjusting && (
-                          <button onClick={()=>{setRatios(preAiRatios);setPreAiRatios(null);setAiReasoning("");setAiChangedIds(new Set());}}
-                            style={{padding:"8px 12px",borderRadius:8,border:"1px solid #ddd",background:"#fff",cursor:"pointer",fontSize:12,fontWeight:600,color:"#888"}}>
-                            Undo
-                          </button>
-                        )}
-                      </div>
-                      <span style={{fontSize:10,color:"#aaa",textAlign:"center"}}>
-                        {summary.dStatus==="low"?"Seats below target":"Seats above target"}
-                      </span>
-                    </div>
-                  </>
-                )}
               </div>
-
-              {/* AI toast notification */}
-              {aiReasoning && (
-                <div style={{background:"#f0f4ff",border:"1px solid #c5cae9",borderRadius:8,padding:"10px 14px",display:"flex",gap:10,alignItems:"center"}}>
-                  <span style={{fontSize:16,flexShrink:0}}>✨</span>
-                  <span style={{fontSize:12,color:"#5c35b0",flex:1}}>{aiReasoning}</span>
-                  <button onClick={()=>setAiReasoning("")} style={{background:"none",border:"none",cursor:"pointer",color:"#aaa",fontSize:14,flexShrink:0,padding:0}}>✕</button>
-                </div>
-              )}
 
               {summary.cap>0&&(
                 <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"12px 18px"}}>
@@ -1118,7 +988,7 @@ All weighted_seat values must sum with touchdown_seats to exactly ${nonDeskCapTa
                           {g.spaces.map(sp=>
                             rowType==="room"
                               ? <RoomRow key={sp.id} sp={sp} results={results} ratios={ratios} setRatios={setRatios} roomSeats={roomSeats} setRoomSeats={setRoomSeats} locked={lockedRooms} baseRatios={baseRatios}/>
-                              : <SpaceRow key={sp.id} sp={sp} results={results} ratios={ratios} baseRatios={baseRatios} setRatios={setRatios} spaceSeats={spaceSeats} setSpaceSeats={setSpaceSeats} fixedExcluded={fixedExcluded} toggleFixed={toggleFixed} aiChanged={aiChangedIds.has(sp.id)}/>
+                              : <SpaceRow key={sp.id} sp={sp} results={results} ratios={ratios} baseRatios={baseRatios} setRatios={setRatios} spaceSeats={spaceSeats} setSpaceSeats={setSpaceSeats} fixedExcluded={fixedExcluded} toggleFixed={toggleFixed}/>
                           )}
                           </>}
                         </div>
