@@ -18,9 +18,21 @@ Then open **http://localhost:5173** in your browser.
 ## Other commands
 
 ```bash
-npm run build    # production build → dist/
-npm run preview  # serve the production build locally
+npm run build             # production build → dist/
+npm run preview           # serve the production build locally
+npm run build:singlefile  # single self-contained HTML file (see below)
 ```
+
+## Standalone HTML file (no server needed)
+
+```bash
+npm run build:singlefile
+```
+
+This produces **`dist-singlefile/Space-Planning-Calculator.html`** — the entire
+app (JS inlined) in one file. Share it or double-click it to open directly in a
+browser; no Node, no server, no install required. Saved scenarios still work via
+the browser's localStorage.
 
 ## Project structure
 
