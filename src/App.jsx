@@ -137,7 +137,7 @@ const SPACE_GROUPS = [
   ]},
   // ── ENCLOSED COLLABORATION ──────────────────────────────────────────────
   { id:"enclosed", label:"Enclosed Collaboration", superGroup:"workspace", color:"#0B5CAB", spaces:[
-    { id:"micro_phone",   label:"Micro Phone Room",    type:"non-capacity", sf:25,  isRoomType:true, seatsPerRoom:1,  roomRatio:30,  regionMult:{AMER:1.00,EMEA:0.90,JAPAC:1.10,India:1.20,LATAM:0.80} },
+    { id:"micro_phone",   label:"Phone Room (Micro)",  type:"non-capacity", sf:25,  isRoomType:true, seatsPerRoom:1,  roomRatio:30,  regionMult:{AMER:1.00,EMEA:0.90,JAPAC:1.10,India:1.20,LATAM:0.80} },
     { id:"focus_pod",     label:"Focus Pod",            type:"non-capacity", sf:35,  isRoomType:true, seatsPerRoom:1,  roomRatio:30,  regionMult:{AMER:1.00,EMEA:1.10,JAPAC:1.20,India:0.90,LATAM:0.90} },
     { id:"meeting_pod",   label:"Meeting Pod",          type:"non-capacity", sf:50,  isRoomType:true, seatsPerRoom:2,  roomRatio:50,  regionMult:{AMER:1.00,EMEA:1.05,JAPAC:1.00,India:0.80,LATAM:0.90} },
     { id:"phone_room",    label:"Phone Room",           type:"non-capacity", sf:50,  isRoomType:true, seatsPerRoom:1,  roomRatio:15,  regionMult:{AMER:1.00,EMEA:0.95,JAPAC:1.00,India:1.10,LATAM:0.90} },
@@ -982,9 +982,67 @@ export default function App() {
                 {summary.cap>0 && summary.dStatus!=="ok" && (
                   <button onClick={handleAutoFit}
                     style={{marginTop:8,width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"9px 14px",borderRadius:8,border:"none",background:SF_BLUE,color:"#fff",cursor:"pointer",fontSize:12,fontWeight:700,boxShadow:"0 2px 8px rgba(1,118,211,0.35)"}}>
-                    ⇅ Auto-fit desks to range
+                    ⇅ Auto-fit
                   </button>
                 )}
+              </Panel>
+
+              {/* 1 & 2-person enclosed spaces — accessibility guardrail card */}
+              <Panel title="1 & 2-Person Spaces">
+                {(()=>{
+                  const rowFor = id => results.find(r=>r.id===id);
+                  const items = [
+                    ["focus_pod","Focus Pod",true],
+                    ["micro_phone","Phone Room (Micro)",true],
+                    ["phone_room","Phone Room",false],
+                    ["phone_room_av","Phone Room (AV)",false],
+                    ["meeting_pod","Meeting Pod",false],
+                  ];
+                  const rooms = items.map(([id,label,inaccessible])=>({id,label,inaccessible,rooms:rowFor(id)?.rooms??0}));
+                  const total = rooms.reduce((a,r)=>a+r.rooms,0);
+                  const inaccessN = rooms.filter(r=>r.inaccessible).reduce((a,r)=>a+r.rooms,0);
+                  const inaccessPct = total>0 ? (inaccessN/total)*100 : 0;
+                  const over = inaccessPct>50;
+                  const maxInaccess = Math.floor(total*0.5);
+                  return (
+                    <>
+                      <div style={{fontSize:11,color:SF_SUBTLE,marginBottom:12,lineHeight:1.4}}>
+                        Enclosed 1 & 2-person rooms. Focus Pods and Phone Rooms (Micro) are not accessible, so they should be no more than 50% of these spaces.
+                      </div>
+                      {rooms.map(r=>(
+                        <div key={r.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
+                          <span style={{width:8,height:8,borderRadius:"50%",background:r.inaccessible?AMBER:GREEN,flexShrink:0}}/>
+                          <span style={{flex:1,fontSize:12,color:SF_GRAY_700,fontWeight:600}}>
+                            {r.label}
+                            {r.inaccessible&&<span style={{fontSize:9,fontWeight:700,color:AMBER,background:`${AMBER}18`,border:`1px solid ${AMBER}55`,borderRadius:4,padding:"1px 5px",marginLeft:6}}>not accessible</span>}
+                          </span>
+                          <span style={{fontSize:14,fontWeight:700,color:SF_NAVY,fontVariantNumeric:"tabular-nums"}}>{r.rooms}</span>
+                        </div>
+                      ))}
+                      <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid #f0f0f0"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:6}}>
+                          <span style={{color:SF_GRAY_700,fontWeight:600}}>Total 1 & 2-person</span>
+                          <span style={{color:SF_NAVY,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{total}</span>
+                        </div>
+                        <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:8}}>
+                          <span style={{color:SF_GRAY_700,fontWeight:600}}>Not accessible</span>
+                          <span style={{color:over?RED:GREEN,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{inaccessN} · {inaccessPct.toFixed(0)}%</span>
+                        </div>
+                        <div style={{position:"relative",height:8,background:"#f0f0f0",borderRadius:4,overflow:"hidden"}}>
+                          <div style={{position:"absolute",left:0,top:0,height:"100%",width:`${Math.min(inaccessPct,100)}%`,background:over?RED:GREEN,borderRadius:4,transition:"width 0.3s"}}/>
+                          <div style={{position:"absolute",left:"50%",top:-2,width:2,height:"calc(100% + 4px)",background:SF_NAVY}}/>
+                        </div>
+                        <div style={{fontSize:10,color:SF_SUBTLE,marginTop:5,textAlign:"right"}}>50% limit line</div>
+                        <div style={{marginTop:8,padding:"8px 10px",borderRadius:7,fontSize:11,fontWeight:600,lineHeight:1.4,
+                          background:over?`${RED}12`:`${GREEN}12`,border:`1px solid ${over?RED:GREEN}44`,color:over?RED:GREEN}}>
+                          {total===0 ? "No 1 & 2-person spaces yet."
+                            : over ? `Over the 50% limit — reduce Focus Pods / Phone Rooms (Micro) to ${maxInaccess} or fewer, or add more accessible rooms.`
+                            : "Within the 50% accessibility limit."}
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </Panel>
             </div>
 
