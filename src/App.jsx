@@ -1,7 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { logOut, getUser, saveScenario, getMyScenarios } from "./firebaseHelpers.js";
 import ScenarioManager from "./ScenarioManager.jsx";
-import AdminPanel from "./AdminPanel.jsx";
 
 // ── Salesforce Digital Palette ────────────────────────────────────────────────
 const SF_NAVY       = "#001E5B";   // Electric Blue 15 — header bg
@@ -454,16 +452,9 @@ function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSea
 }
 
 // ── Main App ─────────────────────────────────────────────────────────────────
-export default function App({ user }) {
-  const [userRole,          setUserRole]          = useState("user");
+export default function App() {
   const [showScenarios,     setShowScenarios]     = useState(false);
-  const [showAdmin,         setShowAdmin]         = useState(false);
 
-  useEffect(() => {
-    if (user?.uid) {
-      getUser(user.uid).then(u => { if (u?.role) setUserRole(u.role); });
-    }
-  }, [user?.uid]);
   const [asf,         setAsf]         = useState(25000);
   const [pinnedSeats, setPinnedSeats] = useState(200);
   const [inputMode,   setInputMode]   = useState("asf");
@@ -868,18 +859,8 @@ All weighted_seat values must sum with touchdown_seats to exactly ${nonDeskCapTa
             <button onClick={()=>setShowScenarios(true)} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 14px",borderRadius:9999,border:"1px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.08)",cursor:"pointer",fontSize:12,fontWeight:600,color:"#fff"}}>
               📂 Scenarios
             </button>
-            {userRole==="admin" && (
-              <button onClick={()=>setShowAdmin(true)} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 14px",borderRadius:9999,border:"1px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.08)",cursor:"pointer",fontSize:12,fontWeight:600,color:"#fff"}}>
-                👥 Users
-              </button>
-            )}
             <button onClick={()=>window.print()} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 14px",borderRadius:9999,border:"1px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.08)",cursor:"pointer",fontSize:12,fontWeight:600,color:"#fff"}}>
               🖨️ Print
-            </button>
-            <div style={{width:1,height:20,background:"rgba(255,255,255,0.2)",margin:"0 4px"}}/>
-            <div style={{fontSize:12,color:"rgba(255,255,255,0.7)"}}>{user?.displayName||user?.email}</div>
-            <button onClick={()=>logOut()} style={{padding:"6px 14px",borderRadius:9999,border:"1px solid rgba(255,100,100,0.4)",background:"rgba(255,100,100,0.1)",cursor:"pointer",fontSize:12,fontWeight:600,color:"#ffaaaa"}}>
-              Sign out
             </button>
           </div>
         </div>
@@ -1704,17 +1685,9 @@ All weighted_seat values must sum with touchdown_seats to exactly ${nonDeskCapTa
 
       {showScenarios && (
         <ScenarioManager
-          user={user}
-          userRole={userRole}
           currentState={currentSettings()}
           onLoad={handleLoadScenario}
           onClose={()=>setShowScenarios(false)}
-        />
-      )}
-      {showAdmin && userRole==="admin" && (
-        <AdminPanel
-          currentUserId={user?.uid}
-          onClose={()=>setShowAdmin(false)}
         />
       )}
       </div>
