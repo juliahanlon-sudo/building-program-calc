@@ -368,7 +368,25 @@ function ColVal({label,value,color,bg,bold}) {
   );
 }
 
-function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,baseRatios}) {
+// Editable Spaces cell: shows the derived count, but typing a number back-solves
+// the underlying ratio via onCommit(count). Blank/invalid input is ignored.
+function EditableCount({label,value,color,bc,onCommit}) {
+  const [draft,setDraft] = useState(null);
+  const shown = draft ?? String(value);
+  return (
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,width:COL.spaces}}>
+      <span style={{fontSize:10,color:SF_LABEL,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em",whiteSpace:"nowrap"}}>{label}</span>
+      <input type="number" min={0} value={shown}
+        onChange={e=>setDraft(e.target.value)}
+        onFocus={e=>e.target.select()}
+        onBlur={()=>{ if(draft!==null){ const n=parseInt(draft,10); if(!isNaN(n)&&n>=0) onCommit(n); setDraft(null); } }}
+        onKeyDown={e=>{ if(e.key==="Enter") e.target.blur(); if(e.key==="Escape"){ setDraft(null); e.target.blur(); } }}
+        style={{width:52,padding:"3px 4px",background:color??"#f0f0f0",border:`1px solid ${bc??"#ddd"}55`,borderRadius:20,fontSize:13,color:bc??SF_NAVY,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums"}}/>
+    </div>
+  );
+}
+
+function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,baseRatios,totalWsCap}) {
   const res     = results.find(r=>r.id===sp.id);
   const rooms   = res?.rooms ?? 0;
   const seatsPer= roomSeats[sp.id] ?? sp.seatsPerRoom ?? 1;
@@ -410,8 +428,14 @@ function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,base
             </div>
           )}
         </div>
-        {/* Spaces */}
-        <ColVal label="Spaces" value={rooms} color="#0B5CAB" bg="#0B5CAB15" bold/>
+        {/* Spaces — editable: typing a room count back-solves the 1:N ratio */}
+        {locked
+          ? <ColVal label="Spaces" value={rooms} color="#0B5CAB" bg="#0B5CAB15" bold/>
+          : <EditableCount label="Spaces" value={rooms} color="#0B5CAB15" bc="#0B5CAB"
+              onCommit={c=>{
+                const n = c<=0 ? (totalWsCap*2+1) : totalWsCap>0 ? Math.max(1,Math.round(totalWsCap/c)) : sp.roomRatio;
+                setRatios(r=>({...r,[sp.id]:n}));
+              }}/>}
         {/* Seats */}
         <ColVal label="Seats" value={seats} color={SF_NAVY} bg="#e8f4fd" bold/>
       </div>
@@ -419,7 +443,7 @@ function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,base
   );
 }
 
-function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSeats,fixedExcluded,toggleFixed,capShareDenom}) {
+function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSeats,fixedExcluded,toggleFixed,capShareDenom,planRef,wsCapDesk}) {
   const res      = results.find(r=>r.id===sp.id);
   const base     = baseRatios[sp.id] ?? 0;
   const modified = Math.abs((ratios[sp.id]??0) - base) > 0.0005;
@@ -480,8 +504,19 @@ function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSea
             </span>
           </div>
         )}
-        {/* Spaces */}
-        <ColVal label="Spaces" value={spaces} color={bc} bg={bb} bold/>
+        {/* Spaces — editable for ratio-driven rows; read-only for fixed-count / auto Techforce */}
+        {(sp.fixedCount || sp.id==="techforce" || sp.id==="techforce_lab")
+          ? <ColVal label="Spaces" value={spaces} color={bc} bg={bb} bold/>
+          : <EditableCount label="Spaces" value={spaces} color={bb} bc={bc}
+              onCommit={c=>{
+                if(sp.isDeskPct){
+                  const pct = (c+wsCapDesk)>0 ? c/(c+wsCapDesk) : 0;
+                  setRatios(r=>({...r,[sp.id]:parseFloat(Math.min(0.99,pct).toFixed(4))}));
+                } else {
+                  const rawR = planRef>0 ? c/planRef : 0;
+                  setRatios(r=>({...r,[sp.id]:parseFloat(rawR.toFixed(4))}));
+                }
+              }}/>}
         {/* Seats */}
         <ColVal label="Seats" value={isNone ? "—" : seats} color={isNone?"#ccc":SF_NAVY} bg={isNone?"#f7f7f7":"#e8f4fd"} bold={!isNone}/>
       </div>
@@ -753,6 +788,15 @@ export default function App() {
       return {...sp,count:rooms*seatsPer,sf,totalSf:rooms*sf,rooms,seatsPer,effectiveN:effN};
     });
   },[planRef,ratios,sfOver,roomSeats,spaceSeats,fixedExcluded]);
+
+  // Bases needed to back-solve a ratio from a typed Spaces count (editable Spaces field).
+  const capBases = useMemo(()=>{
+    const wsCapDesk = results.filter(r=>r.type==="capacity"&&!r.isDeskPct&&WORKSPACE_IDS.includes(r.groupId))
+                             .reduce((a,r)=>a+(r.spaces??r.count),0);
+    const totalWsCap = results.filter(r=>r.type==="capacity"&&WORKSPACE_IDS.includes(r.groupId))
+                              .reduce((a,r)=>a+r.count,0);
+    return {wsCapDesk,totalWsCap};
+  },[results]);
 
   const summary = useMemo(()=>{
     // Apply seatWeight to all capacity spaces (defaults to 1.0 if not set)
@@ -1226,8 +1270,8 @@ export default function App() {
                           </div>
                           {g.spaces.map(sp=>
                             rowType==="room"
-                              ? <RoomRow key={sp.id} sp={sp} results={results} ratios={ratios} setRatios={setRatios} roomSeats={roomSeats} setRoomSeats={setRoomSeats} locked={lockedRooms} baseRatios={baseRatios}/>
-                              : <SpaceRow key={sp.id} sp={sp} results={results} ratios={ratios} baseRatios={baseRatios} setRatios={setRatios} spaceSeats={spaceSeats} setSpaceSeats={setSpaceSeats} fixedExcluded={fixedExcluded} toggleFixed={toggleFixed} capShareDenom={summary.wsCap+summary.openCap}/>
+                              ? <RoomRow key={sp.id} sp={sp} results={results} ratios={ratios} setRatios={setRatios} roomSeats={roomSeats} setRoomSeats={setRoomSeats} locked={lockedRooms} baseRatios={baseRatios} totalWsCap={capBases.totalWsCap}/>
+                              : <SpaceRow key={sp.id} sp={sp} results={results} ratios={ratios} baseRatios={baseRatios} setRatios={setRatios} spaceSeats={spaceSeats} setSpaceSeats={setSpaceSeats} fixedExcluded={fixedExcluded} toggleFixed={toggleFixed} capShareDenom={summary.wsCap+summary.openCap} planRef={planRef} wsCapDesk={capBases.wsCapDesk}/>
                           )}
                           </>}
                         </div>
