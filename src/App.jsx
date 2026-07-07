@@ -14,6 +14,8 @@ const RED           = "#B60554";   // Pink 40
 const SF_GRAY_100   = "#F3F3F3";
 const SF_GRAY_300   = "#DDDBDA";
 const SF_GRAY_700   = "#3E3E3C";
+const SF_LABEL      = "#514F4D";   // readable label gray (replaces #aaa/#bbb)
+const SF_SUBTLE     = "#706E6B";   // secondary/sub text — still muted but legible
 
 // ── Building Program Calculator constants ──────────────────────────────────
 const BPC_AMENITY_CAP_FACTOR = 0.75;
@@ -284,16 +286,16 @@ function sLabel(st)  { return st==="good"?"Within target":st==="under"?"Too dens
 function StatCard({label,value,accent,sub}) {
   return (
     <div style={{background:"#fff",border:`1px solid ${accent}55`,borderRadius:8,padding:"10px 16px",minWidth:100}}>
-      <div style={{fontSize:10,letterSpacing:"0.12em",color:accent,marginBottom:4,textTransform:"uppercase"}}>{label}</div>
-      <div style={{fontSize:22,fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",color:SF_NAVY,lineHeight:1}}>{value}</div>
-      {sub && <div style={{fontSize:10,color:"#aaa",marginTop:4}}>{sub}</div>}
+      <div style={{fontSize:11,letterSpacing:"0.1em",color:accent,fontWeight:700,marginBottom:4,textTransform:"uppercase"}}>{label}</div>
+      <div style={{fontSize:22,fontWeight:700,fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",color:SF_NAVY,lineHeight:1}}>{value}</div>
+      {sub && <div style={{fontSize:11,color:SF_SUBTLE,marginTop:4}}>{sub}</div>}
     </div>
   );
 }
 function Panel({title,children}) {
   return (
     <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:18,boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
-      <div style={{fontSize:10,letterSpacing:"0.15em",color:"#bbb",marginBottom:14,textTransform:"uppercase"}}>{title}</div>
+      <div style={{fontSize:11,letterSpacing:"0.12em",color:SF_LABEL,fontWeight:700,marginBottom:14,textTransform:"uppercase"}}>{title}</div>
       {children}
     </div>
   );
@@ -301,7 +303,7 @@ function Panel({title,children}) {
 function Field({label,children,style:st}) {
   return (
     <div style={{marginBottom:12,...st}}>
-      <label style={{display:"block",fontSize:12,color:"#666",marginBottom:5}}>{label}</label>
+      <label style={{display:"block",fontSize:12,color:SF_GRAY_700,fontWeight:600,marginBottom:5}}>{label}</label>
       {children}
     </div>
   );
@@ -309,8 +311,8 @@ function Field({label,children,style:st}) {
 function CalcRow({label,value,bold,accent}) {
   return (
     <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-      <span style={{fontSize:12,color:bold?"#333":"#666",fontWeight:bold?600:400}}>{label}</span>
-      <span style={{fontSize:13,color:accent??SF_NAVY,fontVariantNumeric:"tabular-nums",fontWeight:bold?700:400}}>{value}</span>
+      <span style={{fontSize:12.5,color:bold?"#181818":SF_GRAY_700,fontWeight:bold?700:500}}>{label}</span>
+      <span style={{fontSize:13,color:accent??SF_NAVY,fontVariantNumeric:"tabular-nums",fontWeight:bold?700:600}}>{value}</span>
     </div>
   );
 }
@@ -328,7 +330,7 @@ function TierCell({value,onChange,suffix,active,color,step=1,width=48,locked}) {
         style={{width,padding:"3px 4px",textAlign:"center",border:`1px solid ${active?SF_BLUE:"#ddd"}`,
           borderRadius:5,fontSize:12,fontWeight:active?700:600,color:active?SF_BLUE:(color??SF_NAVY),
           background:"#fff",outline:"none",fontVariantNumeric:"tabular-nums",MozAppearance:"textfield"}}/>
-      {suffix&&<span style={{fontSize:10,color:"#aaa"}}>{suffix}</span>}
+      {suffix&&<span style={{fontSize:10,color:SF_SUBTLE}}>{suffix}</span>}
     </span>
   );
 }
@@ -336,9 +338,9 @@ function TierCell({value,onChange,suffix,active,color,step=1,width=48,locked}) {
 function SeatStat({label,value,color,bold,sub,subColor}) {
   return (
     <div style={{display:"flex",flexDirection:"column",gap:3,flex:1,minWidth:0}}>
-      <div style={{fontSize:10,letterSpacing:"0.1em",color:"#aaa",textTransform:"uppercase",whiteSpace:"nowrap"}}>{label}</div>
-      <div style={{fontSize:18,fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",color,fontVariantNumeric:"tabular-nums",fontWeight:bold?700:400,lineHeight:1}}>{value}</div>
-      {sub && <div style={{fontSize:10,color:subColor??"#aaa"}}>{sub}</div>}
+      <div style={{fontSize:11,letterSpacing:"0.08em",color:SF_LABEL,fontWeight:700,textTransform:"uppercase",whiteSpace:"nowrap"}}>{label}</div>
+      <div style={{fontSize:20,fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",color,fontVariantNumeric:"tabular-nums",fontWeight:700,lineHeight:1}}>{value}</div>
+      {sub && <div style={{fontSize:11,color:subColor??SF_SUBTLE,fontWeight:600}}>{sub}</div>}
     </div>
   );
 }
@@ -349,8 +351,8 @@ const COL = { ratio:130, pct:44, spaces:56, seats:56 };
 function ColVal({label,value,color,bg,bold}) {
   return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,width:COL.spaces}}>
-      <span style={{fontSize:9,color:"#bbb",textTransform:"uppercase",letterSpacing:"0.08em",whiteSpace:"nowrap"}}>{label}</span>
-      <span style={{background:bg??"#f0f0f0",padding:"3px 8px",borderRadius:20,fontSize:13,color:color??SF_NAVY,fontWeight:bold?700:400,textAlign:"center",minWidth:32,fontVariantNumeric:"tabular-nums"}}>{value}</span>
+      <span style={{fontSize:10,color:SF_LABEL,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em",whiteSpace:"nowrap"}}>{label}</span>
+      <span style={{background:bg??"#f0f0f0",padding:"3px 8px",borderRadius:20,fontSize:13,color:color??SF_NAVY,fontWeight:bold?700:600,textAlign:"center",minWidth:32,fontVariantNumeric:"tabular-nums"}}>{value}</span>
     </div>
   );
 }
@@ -374,14 +376,14 @@ function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,base
       <div style={{display:"flex",alignItems:"center",gap:14,flexShrink:0}}>
         {/* Seats/room input */}
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,width:60}}>
-          <span style={{fontSize:9,color:"#bbb",textTransform:"uppercase",letterSpacing:"0.08em",whiteSpace:"nowrap"}}>Seats/Rm</span>
+          <span style={{fontSize:9,color:SF_LABEL,textTransform:"uppercase",letterSpacing:"0.08em",whiteSpace:"nowrap"}}>Seats/Rm</span>
           <input type="number" min={1} max={100} value={seatsPer} disabled={locked}
             onChange={e=>setRoomSeats(r=>({...r,[sp.id]:parseInt(e.target.value)||1}))}
             style={{width:46,padding:"3px 4px",border:"1px solid #ddd",borderRadius:6,fontSize:12,fontWeight:700,color:locked?"#bbb":SF_NAVY,textAlign:"center",background:locked?"#f5f5f5":"#fff"}}/>
         </div>
         {/* Ratio */}
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,width:COL.ratio}}>
-          <span style={{fontSize:9,color:"#bbb",textTransform:"uppercase",letterSpacing:"0.08em"}}>Ratio</span>
+          <span style={{fontSize:9,color:SF_LABEL,textTransform:"uppercase",letterSpacing:"0.08em"}}>Ratio</span>
           {locked ? (
             <span style={{fontSize:14,fontWeight:700,color:"#0B5CAB",background:"#0B5CAB0D",border:"1px solid #0B5CAB33",borderRadius:6,padding:"3px 10px",fontVariantNumeric:"tabular-nums",whiteSpace:"nowrap"}}>
               1 : {effN}
@@ -426,7 +428,7 @@ function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSea
         {sp.seatWeight && sp.seatWeight < 1 && <span style={{fontSize:9,fontWeight:700,color:"#4DB6AC",background:"#4DB6AC15",border:"1px solid #4DB6AC44",borderRadius:4,padding:"1px 5px",flexShrink:0}}>×{sp.seatWeight}</span>}
         {sp.seatsPerSpace && (
           <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
-            <span style={{fontSize:9,color:"#bbb"}}>seats/space</span>
+            <span style={{fontSize:9,color:SF_LABEL}}>seats/space</span>
             <input type="number" min={1} max={2000} value={spaceSeats[sp.id]??sp.seatsPerSpace}
               onChange={e=>setSpaceSeats(s=>({...s,[sp.id]:parseInt(e.target.value)||1}))}
               style={{width:52,padding:"2px 5px",border:`1px solid ${spaceSeats[sp.id]&&spaceSeats[sp.id]!==sp.seatsPerSpace?SF_BLUE:"#7B68EE55"}`,borderRadius:5,fontSize:12,fontWeight:700,color:spaceSeats[sp.id]&&spaceSeats[sp.id]!==sp.seatsPerSpace?SF_BLUE:"#7B68EE",textAlign:"center",background:"#7B68EE0A"}}/>
@@ -448,7 +450,7 @@ function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSea
             }}>
               {fixedExcluded.has(sp.id)?"Excluded":"Included"}
             </button>
-            <span style={{fontSize:10,color:"#bbb",fontStyle:"italic"}}>1 per floor</span>
+            <span style={{fontSize:10,color:SF_LABEL,fontStyle:"italic"}}>1 per floor</span>
           </div>
         ) : (
           <div style={{display:"flex",alignItems:"center",gap:6,width:COL.ratio+COL.pct+10}}>
@@ -456,7 +458,7 @@ function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSea
               value={ratios[sp.id]??(sp.isDeskPct?0.90:0)}
               onChange={e=>setRatios(r=>({...r,[sp.id]:parseFloat(e.target.value)}))}
               style={{flex:1,accentColor:SF_BLUE,cursor:"pointer"}}/>
-            <span style={{fontSize:11,width:COL.pct,textAlign:"right",fontVariantNumeric:"tabular-nums",color:modified?SF_BLUE:"#bbb",fontWeight:modified?700:400,flexShrink:0}}>
+            <span style={{fontSize:12,width:COL.pct,textAlign:"right",fontVariantNumeric:"tabular-nums",color:modified?SF_BLUE:SF_GRAY_700,fontWeight:modified?700:600,flexShrink:0}}>
               {((ratios[sp.id]??0)*100).toFixed(sp.isDeskPct?0:1)}%
             </span>
           </div>
@@ -854,7 +856,7 @@ export default function App() {
         {/* Stat cards — visible on all tabs except Building Program */}
         {tab!=="program" && (
         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>
-          <StatCard label="Capacity Seats" value={summary.cap.toLocaleString()} accent="#70BF75" sub={<>Target: <span style={{color:dsc,fontWeight:700}}>{targetCapMin}–{targetCapMax}</span>{summary.openCap>0&&<span style={{color:"#aaa"}}> · Open ×0.50</span>}{summary.meCap>0&&<span style={{color:"#aaa"}}> · M&amp;E ×0.75</span>}</>}/>
+          <StatCard label="Capacity Seats" value={summary.cap.toLocaleString()} accent="#70BF75" sub={<>Target: <span style={{color:dsc,fontWeight:700}}>{targetCapMin}–{targetCapMax}</span>{summary.openCap>0&&<span style={{color:SF_SUBTLE}}> · Open ×0.50</span>}{summary.meCap>0&&<span style={{color:SF_SUBTLE}}> · M&amp;E ×0.75</span>}</>}/>
           <StatCard label="Total Seats" value={summary.total.toLocaleString()} accent="#7B68EE" sub="Cap + Non-Cap"/>
           <StatCard label="SF / Cap Seat" value={summary.actualDensity||"—"} accent={dsc} sub={<span style={{color:dsc}}>{sLabel(summary.dStatus)}</span>}/>
           <StatCard label="Total ASF" value={effectiveAsf>=1000?`${(effectiveAsf/1000).toFixed(0)}k`:effectiveAsf} accent="#F4A460" sub={`Workspace: ${workspaceAsf>=1000?(workspaceAsf/1000).toFixed(0)+"k":workspaceAsf} SF`}/>
@@ -876,28 +878,28 @@ export default function App() {
                     <select value={tierId} onChange={e=>changeTier(e.target.value)} style={selStyle}>{TIERS.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select>
                     <span style={{position:"absolute",right:11,top:"50%",transform:"translateY(-50%)",pointerEvents:"none",color:"#999",fontSize:12}}>▾</span>
                   </div>
-                  {tier&&<div style={{fontSize:11,color:"#aaa",marginTop:5}}>{tier.description}</div>}
+                  {tier&&<div style={{fontSize:11,color:SF_SUBTLE,marginTop:5}}>{tier.description}</div>}
                 </Field>
                 <div style={{marginBottom:12}}>
                   <div style={{fontSize:12,color:"#666",marginBottom:6}}>Workspace Density Range</div>
                   <div style={{display:"flex",gap:8,alignItems:"center"}}>
                     {[["Min",sharedDensityMin,setSharedDensityMin],["Max",sharedDensityMax,setSharedDensityMax]].map(([lbl,val,setter])=>(
                       <div key={lbl} style={{flex:1}}>
-                        <div style={{fontSize:10,color:"#aaa",marginBottom:3}}>{lbl} SF/seat</div>
+                        <div style={{fontSize:10,color:SF_SUBTLE,marginBottom:3}}>{lbl} SF/seat</div>
                         <input type="number" min={1} value={val}
                           onChange={e=>setter(parseInt(e.target.value)||1)}
                           style={{width:"100%",padding:"7px 10px",border:"1px solid #ddd",borderRadius:7,fontSize:13,fontWeight:700,color:SF_NAVY,outline:"none",background:"#fff",boxSizing:"border-box",fontVariantNumeric:"tabular-nums"}}/>
                       </div>
                     ))}
                   </div>
-                  <div style={{fontSize:11,color:"#aaa",marginTop:5}}>
+                  <div style={{fontSize:11,color:SF_SUBTLE,marginTop:5}}>
                     Midpoint: <strong style={{color:SF_NAVY}}>{Math.round((densityMin+densityMax)/2)} SF/seat</strong>
                     {tier&&(sharedDensityMin!==tier.densityMin||sharedDensityMax!==tier.densityMax)&&<button onClick={()=>{setSharedDensityMin(tier.densityMin);setSharedDensityMax(tier.densityMax);}} style={{marginLeft:8,background:"#e8f4fd",border:"none",cursor:"pointer",color:SF_BLUE,fontSize:10,padding:"1px 7px",borderRadius:4,fontWeight:600}}>reset</button>}
                   </div>
                 </div>
                 {tier&&(
                   <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid #f0f0f0"}}>
-                    <div style={{fontSize:10,letterSpacing:"0.1em",color:"#bbb",textTransform:"uppercase",marginBottom:10}}>Allocation</div>
+                    <div style={{fontSize:10,letterSpacing:"0.1em",color:SF_LABEL,textTransform:"uppercase",marginBottom:10}}>Allocation</div>
                     {SUPER_GROUPS.map(sg=>{
                       const pct = Math.round((tier.superAlloc[sg.id]??0)*100);
                       return (
@@ -922,7 +924,7 @@ export default function App() {
                     value={bpcAsfValue}
                     onChange={e=>{ setBpcAsfValue(Number(e.target.value)); setAsfOverride(null); }}
                     style={iStyle}/>
-                  <div style={{fontSize:11,color:"#aaa",marginTop:4}}>Synced with Building Program tab</div>
+                  <div style={{fontSize:11,color:SF_SUBTLE,marginTop:4}}>Synced with Building Program tab</div>
                 </Field>
 
                 {/* Enter seats instead */}
@@ -937,7 +939,7 @@ export default function App() {
                 {inputMode==="seats" && (
                   <Field label="Capacity Seats (target)">
                     <input type="number" value={pinnedSeats} min={1} max={10000} step={1} onChange={e=>setPinnedSeats(parseInt(e.target.value)||0)} style={iStyle}/>
-                    <div style={{fontSize:11,color:"#aaa",marginTop:5}}>Implied: <strong>{(pinnedSeats*densityMin).toLocaleString()}–{(pinnedSeats*densityMax).toLocaleString()} SF</strong></div>
+                    <div style={{fontSize:11,color:SF_SUBTLE,marginTop:5}}>Implied: <strong>{(pinnedSeats*densityMin).toLocaleString()}–{(pinnedSeats*densityMax).toLocaleString()} SF</strong></div>
                   </Field>
                 )}
 
@@ -991,7 +993,7 @@ export default function App() {
                     <div style={{position:"absolute",left:`${Math.min((densityMin/200)*100,100)}%`,width:`${Math.min(((densityMax-densityMin)/200)*100,100)}%`,height:"100%",background:`${GREEN}33`,borderRadius:3}}/>
                     <div style={{position:"absolute",left:`${Math.min((summary.actualDensity/200)*100,99)}%`,top:"-3px",width:3,height:"calc(100% + 6px)",background:dsc,borderRadius:2}}/>
                   </div>
-                  <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#aaa",marginTop:4}}>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:SF_SUBTLE,marginTop:4}}>
                     <span>0</span><span style={{color:dsc,fontWeight:700}}>{summary.actualDensity} SF/seat</span><span>200</span>
                   </div>
                 </div>
@@ -1003,7 +1005,7 @@ export default function App() {
                     <div style={{width:4,height:18,background:superColor,borderRadius:2}}/>
                     <span style={{fontSize:11,fontWeight:700,color:superColor,letterSpacing:"0.1em",textTransform:"uppercase"}}>{superLabel}</span>
                     <div style={{flex:1,height:1,background:`${superColor}30`}}/>
-                    {tier&&<span style={{fontSize:11,color:"#aaa"}}>{Math.round((tier.superAlloc[superId]??0)*100)}% of total ASF</span>}
+                    {tier&&<span style={{fontSize:11,color:SF_SUBTLE}}>{Math.round((tier.superAlloc[superId]??0)*100)}% of total ASF</span>}
                   </div>
                   <div style={{display:"flex",flexDirection:"column",gap:10}}>
                     {groups.map(({groupId,rowType})=>{
@@ -1027,7 +1029,7 @@ export default function App() {
                             </div>
                             <div style={{display:"flex",gap:10,alignItems:"center",fontSize:11,color:"#888"}}>
                               {isCollapsed
-                                ? <span style={{color:"#bbb",fontStyle:"italic"}}>hidden</span>
+                                ? <span style={{color:SF_LABEL,fontStyle:"italic"}}>hidden</span>
                                 : <><span><b style={{color:g.color}}>{gTotalSpaces}</b> spaces</span><span><b style={{color:SF_NAVY}}>{gTotalSeats}</b> seats</span></>
                               }
                               {rowType==="room" && !isCollapsed && (
@@ -1040,12 +1042,12 @@ export default function App() {
                                   {lockedRooms ? "🔒 Locked" : "🔓 Unlocked"}
                                 </button>
                               )}
-                              <span style={{fontSize:14,color:"#bbb",lineHeight:1}}>{isCollapsed?"▸":"▾"}</span>
+                              <span style={{fontSize:14,color:SF_LABEL,lineHeight:1}}>{isCollapsed?"▸":"▾"}</span>
                             </div>
                           </div>
                           {!isCollapsed && <>
                           {/* Column header row — consistent across room and space types */}
-                          <div style={{display:"flex",alignItems:"center",padding:"4px 20px",background:"#f7f7f7",borderBottom:"1px solid #eee",fontSize:9,letterSpacing:"0.08em",color:"#bbb",textTransform:"uppercase"}}>
+                          <div style={{display:"flex",alignItems:"center",padding:"4px 20px",background:"#f7f7f7",borderBottom:"1px solid #eee",fontSize:9,letterSpacing:"0.08em",color:SF_LABEL,textTransform:"uppercase"}}>
                             <span style={{flex:1}}>Space Type</span>
                             <div style={{display:"flex",gap:14,alignItems:"center",flexShrink:0}}>
                               {rowType==="room"
@@ -1077,11 +1079,11 @@ export default function App() {
         {tab==="results" && (
           <div style={{display:"flex",flexDirection:"column",gap:16}}>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
-              {[["Capacity Seats",summary.cap.toLocaleString(),"#70BF75",`Target ${targetCapMin}–${targetCapMax}`,dsc],["Non-Capacity",summary.noncap.toLocaleString(),"#7B68EE","Rooms, amenity, support","#aaa"],["Total Seats",summary.total.toLocaleString(),SF_NAVY,"Cap + Non-Cap","#aaa"],["SF / Cap Seat",summary.actualDensity?`${summary.actualDensity} SF`:"—",dsc,sLabel(summary.dStatus),dsc]].map(([l,v,a,sub,sc])=>(
+              {[["Capacity Seats",summary.cap.toLocaleString(),"#70BF75",`Target ${targetCapMin}–${targetCapMax}`,dsc],["Non-Capacity",summary.noncap.toLocaleString(),"#7B68EE","Rooms, amenity, support",SF_SUBTLE],["Total Seats",summary.total.toLocaleString(),SF_NAVY,"Cap + Non-Cap",SF_SUBTLE],["SF / Cap Seat",summary.actualDensity?`${summary.actualDensity} SF`:"—",dsc,sLabel(summary.dStatus),dsc]].map(([l,v,a,sub,sc])=>(
                 <div key={l} style={{background:"#fff",border:`1px solid ${a}44`,borderRadius:12,padding:"16px 20px"}}>
-                  <div style={{fontSize:10,letterSpacing:"0.1em",color:a,marginBottom:6,textTransform:"uppercase"}}>{l}</div>
-                  <div style={{fontSize:28,fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",color:SF_NAVY}}>{v}</div>
-                  <div style={{fontSize:10,color:sc??"#aaa",marginTop:6}}>{sub}</div>
+                  <div style={{fontSize:12,letterSpacing:"0.08em",color:a,fontWeight:700,marginBottom:6,textTransform:"uppercase"}}>{l}</div>
+                  <div style={{fontSize:28,fontWeight:700,fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",color:SF_NAVY}}>{v}</div>
+                  <div style={{fontSize:11,color:sc??SF_SUBTLE,fontWeight:600,marginTop:6}}>{sub}</div>
                 </div>
               ))}
             </div>
@@ -1094,7 +1096,7 @@ export default function App() {
                   <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
                     <div style={{width:4,height:18,background:sg.color,borderRadius:2}}/>
                     <span style={{fontSize:13,fontWeight:700,color:sg.color,textTransform:"uppercase",letterSpacing:"0.08em"}}>{sg.label}</span>
-                    {tier&&<span style={{fontSize:12,color:"#aaa"}}>— {Math.round((tier.superAlloc[sg.id]??0)*100)}% of total ASF</span>}
+                    {tier&&<span style={{fontSize:12,color:SF_SUBTLE}}>— {Math.round((tier.superAlloc[sg.id]??0)*100)}% of total ASF</span>}
                   </div>
                   {sgGroups.map(g=>{
                     const gr = results.filter(r=>r.groupId===g.id&&r.count>0);
@@ -1110,7 +1112,7 @@ export default function App() {
                             {gr.filter(r=>r.type==="capacity").reduce((a,r)=>a+r.count,0)>0&&<span><b style={{color:"#70BF75"}}>{gr.filter(r=>r.type==="capacity").reduce((a,r)=>a+r.count,0)}</b> cap</span>}
                             {gr.filter(r=>r.type==="non-capacity").reduce((a,r)=>a+r.count,0)>0&&<span><b style={{color:"#7B68EE"}}>{gr.filter(r=>r.type==="non-capacity").reduce((a,r)=>a+r.count,0)}</b> non-cap</span>}
                             {gr.reduce((a,r)=>a+(r.rooms??0),0)>0&&<span><b style={{color:SF_NAVY}}>{gr.reduce((a,r)=>a+(r.rooms??0),0)}</b> rooms</span>}
-                            <span style={{color:"#aaa"}}>{gr.reduce((a,r)=>a+r.totalSf,0).toLocaleString()} SF</span>
+                            <span style={{color:SF_SUBTLE}}>{gr.reduce((a,r)=>a+r.totalSf,0).toLocaleString()} SF</span>
                           </div>
                         </div>
                         <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
@@ -1257,7 +1259,7 @@ export default function App() {
                             <input type="number" min={0} value={bpcPerFloorRSF} onChange={e=>setBpcPerFloorRSF(Number(e.target.value))} style={{flex:1,padding:"9px 12px",border:"none",outline:"none",fontSize:14,fontWeight:600,color:SF_NAVY,background:"transparent"}}/>
                             <span style={{padding:"0 12px",fontSize:12,color:"#888",borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>SF</span>
                           </div>
-                          <div style={{fontSize:11,color:"#aaa",marginTop:4}}>Total: {(bpcPerFloorRSF*bpcFloors).toLocaleString()} SF</div>
+                          <div style={{fontSize:11,color:SF_SUBTLE,marginTop:4}}>Total: {(bpcPerFloorRSF*bpcFloors).toLocaleString()} SF</div>
                         </div>
                       )}
 
@@ -1275,7 +1277,7 @@ export default function App() {
                               </div>
                             ))}
                           </div>
-                          <div style={{fontSize:11,color:"#aaa",marginTop:6}}>Total: {bpcFloorRsfList.reduce((a,b)=>a+b,0).toLocaleString()} SF</div>
+                          <div style={{fontSize:11,color:SF_SUBTLE,marginTop:6}}>Total: {bpcFloorRsfList.reduce((a,b)=>a+b,0).toLocaleString()} SF</div>
                         </div>
                       )}
                     </div>
@@ -1601,7 +1603,7 @@ export default function App() {
                       return (
                         <tr key={gid} style={{borderBottom:"1px solid #f5f5f5",background:i%2===0?"#f9f9ff":"#fff"}}>
                           <td style={{padding:"6px 12px 6px 24px",fontSize:12,color:g.color,fontWeight:600}}>{g.label}</td>
-                          <td style={{padding:"6px 12px",fontSize:11,color:"#aaa",fontStyle:"italic"}}>within →</td>
+                          <td style={{padding:"6px 12px",fontSize:11,color:SF_SUBTLE,fontStyle:"italic"}}>within →</td>
                           {TIERS.map(t=>(
                             <td key={t.id} style={{padding:"6px 12px",textAlign:"center",background:tierId===t.id?"#eef5ff":"transparent"}}>
                               <TierCell value={pct(t[grp][gid])} onChange={v=>updateTier(t.id,grp,gid,v)} suffix="%" active={tierId===t.id} color={g.color} locked={tiersLocked}/>
@@ -1612,7 +1614,7 @@ export default function App() {
                     }),
                     (!tiersLocked && (sg.id==="workspace"||sg.id==="amenity")) ? (
                       <tr key={sg.id+"-sum"} style={{background:"#fff"}}>
-                        <td style={{padding:"3px 12px 8px 24px",fontSize:10,color:"#aaa"}}>sub-total</td>
+                        <td style={{padding:"3px 12px 8px 24px",fontSize:10,color:SF_SUBTLE}}>sub-total</td>
                         <td/>
                         {TIERS.map(t=><td key={t.id} style={{padding:"3px 12px 8px",textAlign:"center",background:tierId===t.id?"#eef5ff":"transparent"}}>{sumTag(sg.id==="workspace"?wsSum(t):amSum(t))}</td>)}
                       </tr>
@@ -1620,7 +1622,7 @@ export default function App() {
                   ])}
                   {!tiersLocked && (
                   <tr style={{background:"#fff"}}>
-                    <td style={{padding:"3px 12px 8px",fontSize:10,color:"#aaa",fontWeight:600}}>Total ASF allocation</td>
+                    <td style={{padding:"3px 12px 8px",fontSize:10,color:SF_SUBTLE,fontWeight:600}}>Total ASF allocation</td>
                     <td/>
                     {TIERS.map(t=><td key={t.id} style={{padding:"3px 12px 8px",textAlign:"center",background:tierId===t.id?"#f0f8ff":"transparent"}}>{sumTag(superSum(t))}</td>)}
                   </tr>
@@ -1631,9 +1633,9 @@ export default function App() {
                       <td key={t.id} style={{padding:"8px 12px",textAlign:"center",background:tierId===t.id?"#f0f8ff":"transparent",borderTop:"2px solid #e0e0e0"}}>
                         <span style={{display:"inline-flex",alignItems:"center",gap:3,justifyContent:"center"}}>
                           <TierCell value={t.densityMin} onChange={v=>updateTier(t.id,"density","densityMin",v)} active={tierId===t.id} width={42} locked={tiersLocked}/>
-                          <span style={{fontSize:11,color:"#aaa"}}>–</span>
+                          <span style={{fontSize:11,color:SF_SUBTLE}}>–</span>
                           <TierCell value={t.densityMax} onChange={v=>updateTier(t.id,"density","densityMax",v)} active={tierId===t.id} width={42} locked={tiersLocked}/>
-                          <span style={{fontSize:10,color:"#aaa"}}>SF</span>
+                          <span style={{fontSize:10,color:SF_SUBTLE}}>SF</span>
                         </span>
                       </td>
                     ))}
@@ -1654,7 +1656,7 @@ export default function App() {
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
                   <div style={{width:4,height:18,background:sg.color,borderRadius:2}}/>
                   <span style={{fontSize:12,fontWeight:700,color:sg.color,letterSpacing:"0.1em",textTransform:"uppercase"}}>{sg.label}</span>
-                  {tier&&<span style={{fontSize:12,color:"#aaa"}}>— {Math.round((tier.superAlloc[sg.id]??0)*100)}% of total ASF</span>}
+                  {tier&&<span style={{fontSize:12,color:SF_SUBTLE}}>— {Math.round((tier.superAlloc[sg.id]??0)*100)}% of total ASF</span>}
                 </div>
                 <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,overflow:"hidden"}}>
                   <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
