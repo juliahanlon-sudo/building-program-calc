@@ -74,7 +74,7 @@ const SUPER_GROUPS = [
 ];
 
 // Tier data sourced directly from uploaded spreadsheet
-const TIERS = [
+const DEFAULT_TIERS = [
   { id:"T1", label:"Tier 1 — Towers (Top Customer Markets)",
     description:"Long-term lease with Salesforce Standard Design and full amenities. Examples: New York, London, San Francisco, Tokyo.",
     superAlloc:{ workspace:0.65, amenity:0.25, support:0.10 },
@@ -257,8 +257,8 @@ function allSpaces() {
   return SPACE_GROUPS.flatMap(g => g.spaces.map(sp => ({...sp, groupId:g.id, superGroup:g.superGroup})));
 }
 
-function computeRatios(tierId, regionId) {
-  const tier = TIERS.find(t => t.id === tierId);
+function computeRatios(tierId, regionId, tiers=DEFAULT_TIERS) {
+  const tier = tiers.find(t => t.id === tierId);
   const r = {};
   SPACE_GROUPS.forEach(g => {
     const gAlloc = groupAlloc(tier, g.id);
@@ -314,6 +314,25 @@ function CalcRow({label,value,bold,accent}) {
     </div>
   );
 }
+// Small inline cell for the Tiers & Regions page. When `locked` it renders as
+// plain text (indistinguishable from a normal read-only table); when unlocked
+// it becomes an editable number input. `active` tints it for the selected tier.
+function TierCell({value,onChange,suffix,active,color,step=1,width=48,locked}) {
+  if(locked){
+    return <span style={{fontSize:active?14:12,fontWeight:active?700:600,color:active?SF_BLUE:(color??SF_NAVY),fontVariantNumeric:"tabular-nums"}}>{value}{suffix}</span>;
+  }
+  return (
+    <span style={{display:"inline-flex",alignItems:"center",gap:2,justifyContent:"center"}}>
+      <input type="number" value={value} min={0} step={step}
+        onChange={e=>onChange(e.target.value)}
+        style={{width,padding:"3px 4px",textAlign:"center",border:`1px solid ${active?SF_BLUE:"#ddd"}`,
+          borderRadius:5,fontSize:12,fontWeight:active?700:600,color:active?SF_BLUE:(color??SF_NAVY),
+          background:"#fff",outline:"none",fontVariantNumeric:"tabular-nums",MozAppearance:"textfield"}}/>
+      {suffix&&<span style={{fontSize:10,color:"#aaa"}}>{suffix}</span>}
+    </span>
+  );
+}
+
 function SeatStat({label,value,color,bold,sub,subColor}) {
   return (
     <div style={{display:"flex",flexDirection:"column",gap:3,flex:1,minWidth:0}}>
@@ -461,6 +480,9 @@ export default function App() {
   const [city,        setCity]        = useState("");
   const [region,      setRegion]      = useState("AMER");
   const [tierId,      setTierId]      = useState("T1");
+  // Editable tier definitions (allocations + density) — seeded from the defaults.
+  const [TIERS,       setTIERS]       = useState(()=>JSON.parse(JSON.stringify(DEFAULT_TIERS)));
+  const [tiersLocked, setTiersLocked] = useState(true); // tier table read-only until unlocked
   const [ratios,      setRatios]      = useState(()=>computeRatios("T1","AMER"));
   const [sfOver,      setSfOver]      = useState({});
   const [roomSeats,   setRoomSeats]   = useState({});
@@ -515,6 +537,7 @@ export default function App() {
   });
 
   const currentSettings = () => ({
+    tiers:TIERS,
     asf,pinnedSeats,inputMode,city,region,tierId,ratios,sfOver,roomSeats,spaceSeats,collapsedGroups,
     sharedDensityMin,sharedDensityMax,floorSel,selectedFloors,asfOverride,fixedExcluded:[...fixedExcluded],
     bpcSfBase,bpcAsfValue,bpcFloorMode,bpcBuildingRSF,bpcPerFloorRSF,bpcFloors,bpcFloorRSFs,
@@ -539,6 +562,7 @@ export default function App() {
       const raw = localStorage.getItem(`spaceplan:${name}`);
       if(!raw) return;
       const s = JSON.parse(raw);
+      if(s.tiers       !== undefined) setTIERS(s.tiers);
       if(s.asf         !== undefined) setAsf(s.asf);
       if(s.pinnedSeats !== undefined) setPinnedSeats(s.pinnedSeats);
       if(s.inputMode   !== undefined) setInputMode(s.inputMode);
@@ -573,6 +597,7 @@ export default function App() {
   };
 
   const handleLoadScenario = (s) => {
+    if(s.tiers       !== undefined) setTIERS(s.tiers);
     if(s.asf         !== undefined) setAsf(s.asf);
     if(s.pinnedSeats !== undefined) setPinnedSeats(s.pinnedSeats);
     if(s.inputMode   !== undefined) setInputMode(s.inputMode);
@@ -607,12 +632,45 @@ export default function App() {
   const densityMin = sharedDensityMin;
   const densityMax = sharedDensityMax;
 
-  function changeTier(id)   { const t=TIERS.find(x=>x.id===id); setTierId(id); setRatios(computeRatios(id,region)); if(t){setSharedDensityMin(t.densityMin);setSharedDensityMax(t.densityMax);} }
+  function changeTier(id)   { const t=TIERS.find(x=>x.id===id); setTierId(id); setRatios(computeRatios(id,region,TIERS)); if(t){setSharedDensityMin(t.densityMin);setSharedDensityMax(t.densityMax);} }
   function changeRegion(id) {
     setRegion(id);
-    setRatios(computeRatios(tierId,id));
+    setRatios(computeRatios(tierId,id,TIERS));
     const d = BPC_REGION_DENSITY[id];
     if(d) { setSharedDensityMin(d.min); setSharedDensityMax(d.max); }
+  }
+
+  // ── Editable tier definitions (Tiers & Regions page) ────────────────────
+  // group: "superAlloc" | "wsAlloc" | "amAlloc" (stored as 0–1 fractions) or
+  // "density" (stored as raw SF ints). Recomputes ratios when the edited tier
+  // is the active one so the calculator stays in sync.
+  function updateTier(tId, group, key, rawValue){
+    setTIERS(prev=>{
+      const next = prev.map(t=>{
+        if(t.id!==tId) return t;
+        if(group==="density"){
+          const v = Math.max(0, parseInt(rawValue)||0);
+          return {...t, [key]: v};
+        }
+        const v = Math.max(0, Math.min(100, parseFloat(rawValue)||0))/100;
+        return {...t, [group]: {...t[group], [key]: v}};
+      });
+      if(tId===tierId) setRatios(computeRatios(tierId,region,next));
+      return next;
+    });
+    if(tId===tierId && group==="density"){
+      const v = Math.max(0, parseInt(rawValue)||0);
+      if(key==="densityMin") setSharedDensityMin(v);
+      if(key==="densityMax") setSharedDensityMax(v);
+    }
+  }
+
+  function resetTiers(){
+    const fresh = JSON.parse(JSON.stringify(DEFAULT_TIERS));
+    setTIERS(fresh);
+    setRatios(computeRatios(tierId,region,fresh));
+    const t = fresh.find(x=>x.id===tierId);
+    if(t){ setSharedDensityMin(t.densityMin); setSharedDensityMax(t.densityMax); }
   }
 
   // ── Derive per-floor RSF array from BPC inputs ─────────────────────────
@@ -716,7 +774,7 @@ export default function App() {
     setRatios(r=>({...r,desks:solved}));
   }
 
-  const baseRatios = useMemo(()=>computeRatios(tierId,region),[tierId,region]);
+  const baseRatios = useMemo(()=>computeRatios(tierId,region,TIERS),[tierId,region,TIERS]);
   const dsc = sColor(summary.dStatus);
   const iStyle = {width:"100%",padding:"8px 12px",border:`1px solid ${SF_GRAY_300}`,borderRadius:4,fontSize:14,color:SF_NAVY,fontWeight:700,boxSizing:"border-box",outline:"none",background:"#fff"};
   const selStyle = {width:"100%",padding:"9px 34px 9px 12px",border:"1px solid #ddd",borderRadius:8,background:"#fff",color:SF_NAVY,fontSize:13,fontWeight:600,appearance:"none",WebkitAppearance:"none",cursor:"pointer",outline:"none",boxSizing:"border-box"};
@@ -1474,12 +1532,41 @@ export default function App() {
         })()}
 
         {/* ── TIERS & REGIONS ── */}
-        {tab==="tiers" && (
+        {tab==="tiers" && (()=>{
+          const pct = v => Math.round((v??0)*100);
+          const superSum = t => pct(t.superAlloc.workspace)+pct(t.superAlloc.amenity)+pct(t.superAlloc.support);
+          const wsSum    = t => ["indiv","enclosed","wpspec","open"].reduce((a,k)=>a+pct(t.wsAlloc[k]),0);
+          const amSum    = t => ["me","specialty","hospitality"].reduce((a,k)=>a+pct(t.amAlloc[k]),0);
+          const sumTag = (sum) => <span style={{fontSize:10,fontWeight:700,color:sum===100?GREEN:"#E57373"}}>{sum}%{sum===100?"":" ⚠"}</span>;
+          const tiersModified = JSON.stringify(TIERS)!==JSON.stringify(DEFAULT_TIERS);
+          return (
           <div style={{display:"flex",flexDirection:"column",gap:20}}>
             <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,overflow:"hidden"}}>
-              <div style={{padding:"14px 20px",borderBottom:"1px solid #e0e0e0",background:"#fafafa"}}>
-                <span style={{fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",fontSize:18,color:SF_NAVY}}>Allocation by Tier</span>
+              <div style={{padding:"14px 20px",borderBottom:"1px solid #e0e0e0",background:"#fafafa",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+                <div>
+                  <span style={{fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",fontSize:18,color:SF_NAVY}}>Allocation by Tier</span>
+                  <div style={{fontSize:11,color:"#888",marginTop:2}}>
+                    {tiersLocked
+                      ? "Standard tier breakdowns. Unlock to customize."
+                      : "Editing enabled — each group should total 100%. Changes apply to the selected tier."}
+                  </div>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  {!tiersLocked && tiersModified && (
+                    <button onClick={resetTiers}
+                      style={{padding:"7px 14px",borderRadius:8,border:"1px solid #ddd",background:"#fff",cursor:"pointer",fontSize:12,fontWeight:600,color:"#888",whiteSpace:"nowrap"}}>
+                      ↺ Reset to defaults
+                    </button>
+                  )}
+                  <button onClick={()=>setTiersLocked(v=>!v)} title={tiersLocked?"Unlock to edit tier allocations":"Lock tier allocations"}
+                    style={{display:"flex",alignItems:"center",gap:6,padding:"7px 14px",borderRadius:8,border:"1px solid",
+                      borderColor:tiersLocked?"#ddd":SF_BLUE,background:tiersLocked?"#fff":"#e8f4fd",
+                      cursor:"pointer",fontSize:12,fontWeight:600,color:tiersLocked?"#888":SF_BLUE,whiteSpace:"nowrap"}}>
+                    {tiersLocked?"🔒 Locked":"🔓 Editing"}
+                  </button>
+                </div>
               </div>
+              <div style={{overflowX:"auto"}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
                 <thead><tr>
                   <th style={{padding:"8px 12px",textAlign:"left",fontSize:11,color:"#888",borderBottom:"1px solid #e0e0e0",background:"#f7f7f7"}}>Category</th>
@@ -1489,32 +1576,64 @@ export default function App() {
                 <tbody>
                   {SUPER_GROUPS.map((sg)=>[
                     <tr key={sg.id} style={{background:"#fafafa"}}>
-                      <td colSpan={2} style={{padding:"8px 12px",fontWeight:700,color:sg.color,fontSize:11,letterSpacing:"0.08em",textTransform:"uppercase",borderBottom:"1px solid #eee"}}>{sg.label} — % of Total ASF</td>
-                      {TIERS.map(t=><td key={t.id} style={{padding:"8px 12px",textAlign:"center",fontWeight:700,fontSize:14,color:tierId===t.id?SF_BLUE:sg.color,background:tierId===t.id?"#f0f8ff":"transparent",borderBottom:"1px solid #eee"}}>{Math.round((t.superAlloc[sg.id]??0)*100)}%</td>)}
+                      <td style={{padding:"8px 12px",fontWeight:700,color:sg.color,fontSize:11,letterSpacing:"0.08em",textTransform:"uppercase",borderBottom:"1px solid #eee"}}>{sg.label} — % of Total ASF</td>
+                      <td style={{padding:"8px 6px",textAlign:"center",borderBottom:"1px solid #eee"}}/>
+                      {TIERS.map(t=>(
+                        <td key={t.id} style={{padding:"6px 12px",textAlign:"center",background:tierId===t.id?"#f0f8ff":"transparent",borderBottom:"1px solid #eee"}}>
+                          <TierCell value={pct(t.superAlloc[sg.id])} onChange={v=>updateTier(t.id,"superAlloc",sg.id,v)} suffix="%" active={tierId===t.id} color={sg.color} locked={tiersLocked}/>
+                        </td>
+                      ))}
                     </tr>,
                     ...( sg.id==="workspace"?["indiv","enclosed","wpspec","open"]:sg.id==="amenity"?["me","specialty","hospitality"]:[] ).map((gid,i)=>{
                       const g = SPACE_GROUPS.find(x=>x.id===gid);
+                      const grp = sg.id==="workspace"?"wsAlloc":"amAlloc";
                       return (
                         <tr key={gid} style={{borderBottom:"1px solid #f5f5f5",background:i%2===0?"#f9f9ff":"#fff"}}>
                           <td style={{padding:"6px 12px 6px 24px",fontSize:12,color:g.color,fontWeight:600}}>{g.label}</td>
                           <td style={{padding:"6px 12px",fontSize:11,color:"#aaa",fontStyle:"italic"}}>within →</td>
-                          {TIERS.map(t=>{
-                            const alloc = sg.id==="workspace"?t.wsAlloc[gid]:t.amAlloc[gid];
-                            return <td key={t.id} style={{padding:"6px 12px",textAlign:"center",fontSize:12,color:tierId===t.id?SF_BLUE:g.color,fontWeight:tierId===t.id?700:400,background:tierId===t.id?"#eef5ff":"transparent"}}>{Math.round((alloc??0)*100)}%</td>;
-                          })}
+                          {TIERS.map(t=>(
+                            <td key={t.id} style={{padding:"6px 12px",textAlign:"center",background:tierId===t.id?"#eef5ff":"transparent"}}>
+                              <TierCell value={pct(t[grp][gid])} onChange={v=>updateTier(t.id,grp,gid,v)} suffix="%" active={tierId===t.id} color={g.color} locked={tiersLocked}/>
+                            </td>
+                          ))}
                         </tr>
                       );
-                    })
+                    }),
+                    (!tiersLocked && (sg.id==="workspace"||sg.id==="amenity")) ? (
+                      <tr key={sg.id+"-sum"} style={{background:"#fff"}}>
+                        <td style={{padding:"3px 12px 8px 24px",fontSize:10,color:"#aaa"}}>sub-total</td>
+                        <td/>
+                        {TIERS.map(t=><td key={t.id} style={{padding:"3px 12px 8px",textAlign:"center",background:tierId===t.id?"#eef5ff":"transparent"}}>{sumTag(sg.id==="workspace"?wsSum(t):amSum(t))}</td>)}
+                      </tr>
+                    ) : null
                   ])}
+                  {!tiersLocked && (
+                  <tr style={{background:"#fff"}}>
+                    <td style={{padding:"3px 12px 8px",fontSize:10,color:"#aaa",fontWeight:600}}>Total ASF allocation</td>
+                    <td/>
+                    {TIERS.map(t=><td key={t.id} style={{padding:"3px 12px 8px",textAlign:"center",background:tierId===t.id?"#f0f8ff":"transparent"}}>{sumTag(superSum(t))}</td>)}
+                  </tr>
+                  )}
                   <tr style={{background:"#f7f7f7"}}>
                     <td colSpan={2} style={{padding:"8px 12px",fontWeight:700,color:"#555",fontSize:11,borderTop:"2px solid #e0e0e0"}}>Density Target (SF / Cap Seat)</td>
-                    {TIERS.map(t=><td key={t.id} style={{padding:"8px 12px",textAlign:"center",fontSize:11,color:tierId===t.id?SF_BLUE:"#555",fontWeight:tierId===t.id?700:400,background:tierId===t.id?"#f0f8ff":"transparent",borderTop:"2px solid #e0e0e0"}}>{t.densityMin}–{t.densityMax} SF</td>)}
+                    {TIERS.map(t=>(
+                      <td key={t.id} style={{padding:"8px 12px",textAlign:"center",background:tierId===t.id?"#f0f8ff":"transparent",borderTop:"2px solid #e0e0e0"}}>
+                        <span style={{display:"inline-flex",alignItems:"center",gap:3,justifyContent:"center"}}>
+                          <TierCell value={t.densityMin} onChange={v=>updateTier(t.id,"density","densityMin",v)} active={tierId===t.id} width={42} locked={tiersLocked}/>
+                          <span style={{fontSize:11,color:"#aaa"}}>–</span>
+                          <TierCell value={t.densityMax} onChange={v=>updateTier(t.id,"density","densityMax",v)} active={tierId===t.id} width={42} locked={tiersLocked}/>
+                          <span style={{fontSize:10,color:"#aaa"}}>SF</span>
+                        </span>
+                      </td>
+                    ))}
                   </tr>
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* ── SPACE TYPES ── */}
         {tab==="db" && (
