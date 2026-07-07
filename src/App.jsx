@@ -131,7 +131,7 @@ const SPACE_GROUPS = [
   { id:"indiv", label:"Individual Work", superGroup:"workspace", color:"#70BF75", spaces:[
     { id:"desks",                 label:"Desks",                  type:"capacity",     sf:50,  isDeskPct:true, baseRatio:0.90, seatsPerSpace:1, regionMult:{AMER:1.00,EMEA:0.95,JAPAC:0.90,India:1.05,LATAM:1.00} },
     { id:"private_office",        label:"Private Office",         type:"capacity",     sf:150, baseRatio:0, seatsPerSpace:1, regionMult:{AMER:1.00,EMEA:1.10,JAPAC:0.80,India:0.90,LATAM:0.90} },
-    { id:"touchdown_seat",        label:"Touchdown Seat",         type:"capacity",     sf:36,  baseRatio:0.02, seatsPerSpace:1, regionMult:{AMER:1.00,EMEA:1.10,JAPAC:1.20,India:0.80,LATAM:0.90} },
+    { id:"touchdown_seat",        label:"Touchdown Seat",         type:"capacity",     sf:36,  baseRatio:0.05, seatsPerSpace:1, regionMult:{AMER:1.00,EMEA:1.10,JAPAC:1.20,India:0.80,LATAM:0.90} },
     { id:"library",               label:"Library",                type:"capacity",     sf:60,  baseRatio:0.01, seatsPerSpace:14, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.10,India:0.70,LATAM:0.80} },
     { id:"work_room",             label:"Work Room",              type:"capacity",     sf:100, baseRatio:0.01, seatsPerSpace:6, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:0.80,LATAM:0.90} },
   ]},
@@ -139,7 +139,7 @@ const SPACE_GROUPS = [
   { id:"enclosed", label:"Enclosed Collaboration", superGroup:"workspace", color:"#0B5CAB", spaces:[
     { id:"micro_phone",   label:"Phone Room (Micro)",  type:"non-capacity", sf:25,  isRoomType:true, seatsPerRoom:1,  roomRatio:30,  regionMult:{AMER:1.00,EMEA:0.90,JAPAC:1.10,India:1.20,LATAM:0.80} },
     { id:"focus_pod",     label:"Focus Pod",            type:"non-capacity", sf:35,  isRoomType:true, seatsPerRoom:1,  roomRatio:30,  regionMult:{AMER:1.00,EMEA:1.10,JAPAC:1.20,India:0.90,LATAM:0.90} },
-    { id:"meeting_pod",   label:"Meeting Pod",          type:"non-capacity", sf:50,  isRoomType:true, seatsPerRoom:2,  roomRatio:50,  regionMult:{AMER:1.00,EMEA:1.05,JAPAC:1.00,India:0.80,LATAM:0.90} },
+    { id:"meeting_pod",   label:"Meeting Pod",          type:"non-capacity", sf:50,  isRoomType:true, seatsPerRoom:4,  roomRatio:50,  regionMult:{AMER:1.00,EMEA:1.05,JAPAC:1.00,India:0.80,LATAM:0.90} },
     { id:"phone_room",    label:"Phone Room",           type:"non-capacity", sf:50,  isRoomType:true, seatsPerRoom:1,  roomRatio:15,  regionMult:{AMER:1.00,EMEA:0.95,JAPAC:1.00,India:1.10,LATAM:0.90} },
     { id:"phone_room_av", label:"Phone Room (AV)",      type:"non-capacity", sf:60,  isRoomType:true, seatsPerRoom:2,  roomRatio:15,  regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:0.90,LATAM:0.90} },
     { id:"huddle_room",   label:"Huddle Room",          type:"non-capacity", sf:120, isRoomType:true, seatsPerRoom:5,  roomRatio:25,  regionMult:{AMER:1.00,EMEA:1.10,JAPAC:0.95,India:1.10,LATAM:1.00} },
@@ -170,11 +170,11 @@ const SPACE_GROUPS = [
     { id:"cafe_collab",      label:"Cafe Collaboration Table", type:"capacity",     sf:60,  baseRatio:0.20, seatsPerSpace:4, seatWeight:0.50, regionMult:{AMER:1.00,EMEA:1.10,JAPAC:1.05,India:1.10,LATAM:1.00} },
     { id:"collab_space",     label:"Collaboration Space",      type:"capacity",     sf:120, baseRatio:0, seatsPerSpace:6, seatWeight:0.50, regionMult:{AMER:1.00,EMEA:0.95,JAPAC:0.95,India:0.85,LATAM:0.95} },
     { id:"community_table",  label:"Community Table",          type:"capacity",     sf:50,  baseRatio:0.20, seatsPerSpace:6, seatWeight:0.50, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.10,India:1.20,LATAM:1.00} },
-    { id:"project_bay",      label:"Project Bay",              type:"capacity",     sf:150, baseRatio:0.10, seatsPerSpace:6, seatWeight:0.50, regionMult:{AMER:1.00,EMEA:0.90,JAPAC:0.85,India:0.70,LATAM:0.85} },
+    { id:"project_bay",      label:"Project Bay",              type:"capacity",     sf:150, baseRatio:0, seatsPerSpace:6, seatWeight:0.50, regionMult:{AMER:1.00,EMEA:0.90,JAPAC:0.85,India:0.70,LATAM:0.85} },
     { id:"soft_seating",     label:"Soft Seating",             type:"non-capacity", sf:40,  baseRatio:0.10, seatsPerSpace:2, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:0.90,LATAM:1.00} },
   ]},
   // ── M&E ─────────────────────────────────────────────────────────────────
-  { id:"me", label:"M&E", superGroup:"amenity", color:"#4DB6AC", spaces:[
+  { id:"me", label:"M&E", superGroup:"amenity", color:"#ff8000", spaces:[
     { id:"auditorium",       label:"Auditorium",           type:"capacity",     sf:2000, baseRatio:0, seatsPerSpace:150, seatWeight:0.75, regionMult:{AMER:1.00,EMEA:0.90,JAPAC:0.85,India:0.90,LATAM:0.85} },
     { id:"pre_function",     label:"Pre-Function Space",   type:"capacity",     sf:1500, baseRatio:0, seatsPerSpace:50, seatWeight:0.75, regionMult:{AMER:1.00,EMEA:0.95,JAPAC:0.90,India:0.85,LATAM:0.90} },
     { id:"training_l",       label:"Training Room (L)",    type:"capacity",     sf:1000, baseRatio:0, seatsPerSpace:50, seatWeight:0.75, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.10,LATAM:0.90} },
@@ -208,7 +208,7 @@ const SPACE_GROUPS = [
     { id:"ux_lab",           label:"UX Lab",                   type:"non-capacity", sf:100, baseRatio:0, seatsPerSpace:4, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
   ]},
   // ── HOSPITALITY ─────────────────────────────────────────────────────────
-  { id:"hospitality", label:"Hospitality", superGroup:"amenity", color:"#BA68C8", spaces:[
+  { id:"hospitality", label:"Hospitality", superGroup:"amenity", color:"#f15d2f", spaces:[
     { id:"ai_learning",         label:"AI - Learning",                    type:"non-capacity", sf:200, baseRatio:0, seatsPerSpace:8, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"barista_bar",         label:"Barista Bar",                      type:"non-capacity", sf:150, baseRatio:0, seatsPerSpace:4, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"cafeteria",           label:"Cafeteria",                        type:"non-capacity", sf:800, baseRatio:0, seatsPerSpace:60, regionMult:{AMER:1.00,EMEA:1.10,JAPAC:1.10,India:1.20,LATAM:1.10} },
@@ -734,7 +734,17 @@ export default function App() {
       return {...sp,count,sf,totalSf:count*sf,rooms:0};
     });
     const totalWsCap = pass2.filter(r=>r.type==="capacity"&&WORKSPACE_IDS.includes(r.groupId)).reduce((a,r)=>a+r.count,0);
+    // Techforce bar scales with total capacity seats: 250–500 → 2 seats,
+    // 500–1000 → 4 seats, over 1000 → 6 seats, under 250 → none.
+    const capSeatsTotal = pass2.filter(r=>r.type==="capacity").reduce((a,r)=>a+Math.round(r.count*(r.seatWeight??1)),0);
+    const techforceSeats = capSeatsTotal>1000 ? 6 : capSeatsTotal>=500 ? 4 : capSeatsTotal>=250 ? 2 : 0;
     return pass2.map(sp=>{
+      if (sp.id==="techforce" || sp.id==="techforce_lab") {
+        const spaces  = techforceSeats>0 ? 1 : 0;
+        const seatsPer = spaceSeats[sp.id] ?? techforceSeats;
+        const sf = sfOver[sp.id]??sp.sf;
+        return {...sp,spaces,count:spaces*seatsPer,sf,totalSf:spaces*sf,rooms:0,seatsPer};
+      }
       if (!sp.isRoomType) return sp;
       const effN = ratios[sp.id]??sp.roomRatio;
       const rooms = effN>0 ? Math.round(totalWsCap/effN) : 0;
@@ -761,41 +771,64 @@ export default function App() {
   },[results,workspaceAsf,densityMin,densityMax,inputMode,pinnedSeats]);
 
   // ── Auto-fit ───────────────────────────────────────────────────────────
-  // Solve the desk % so capacity seats land inside the target density range
-  // (aims at the midpoint). Manual only — triggered by the "Auto-fit to range"
-  // button — so hand-tuned counts are never silently overwritten. Only the
-  // "desks" ratio is balanced; every other space stays exactly as set.
+  // Pin Desks to ~85% of the workspace + open-collaboration capacity seats and
+  // scale the OTHER capacity bars (touchdown, library, work room, booths, cafe
+  // collab, community table, etc.) down/up proportionally so those bars fill the
+  // remaining 15% and the % column totals 100%. Total capacity seats are anchored
+  // to the density midpoint so the plan stays inside the target range. Manual only
+  // — triggered by the button — so it never silently runs on hand edits.
+  const TARGET_DESK_SHARE = 0.85;
   function handleAutoFit(){
     if(workspaceAsf<=0||densityMin<=0||densityMax<=0) return;
     const allSp = allSpaces();
     const pRef  = planRef;
     const densityMid = (densityMin+densityMax)/2;
-    const exactCapTarget = Math.floor(workspaceAsf/densityMid);
-    // capacity seats produced for a given desk %, mirroring the summary math
-    const simulateCap = (dPct)=>{
-      const p1 = allSp.map(sp=>{
-        if(sp.isDeskPct||sp.isRoomType) return {...sp,spaces:0,count:0};
-        const rawR = ratios[sp.id]??0;
-        let spaces = sp.fixedCount ? (fixedExcluded.has(sp.id)?0:sp.fixedCount) : Math.round(pRef*rawR);
-        if(TRAINING_IDS.includes(sp.id) && rawR>0 && spaces<1) spaces = 1;
+    const target = Math.max(1, Math.floor(workspaceAsf/densityMid)); // total cap-seat target
+
+    // "Other" capacity bars = non-desk capacity spaces in Individual Work + Open Collab.
+    const isOtherCap = sp => sp.type==="capacity" && !sp.isDeskPct && (sp.groupId==="indiv"||sp.groupId==="open");
+    // Weighted seats + raw space counts for the other bars at a given ratio-scale.
+    const simOther = (f)=>{
+      let seats=0, spaces=0;
+      allSp.forEach(sp=>{
+        if(!isOtherCap(sp)) return;
+        const rawR = (ratios[sp.id]??0)*f;
+        const n = sp.fixedCount ? (fixedExcluded.has(sp.id)?0:sp.fixedCount) : Math.round(pRef*rawR);
         const seatsPer = spaceSeats[sp.id] ?? sp.seatsPerSpace ?? 1;
-        const count = sp.seatsPerSpace ? spaces*seatsPer : spaces;
-        return {...sp,spaces,count};
+        const s = sp.seatsPerSpace ? n*seatsPer : n;
+        seats  += Math.round(s*(sp.seatWeight??1));
+        spaces += n;
       });
-      const wsCap2 = p1.filter(r=>r.type==="capacity"&&!r.isDeskPct&&WORKSPACE_IDS.includes(r.groupId)).reduce((a,r)=>a+(r.spaces??r.count),0);
-      const deskCount = dPct<1 ? Math.round((dPct*wsCap2)/(1-dPct)) : 0;
-      const p2 = p1.map(sp=>sp.isDeskPct?{...sp,count:deskCount}:sp);
-      const capR = p2.filter(r=>r.type==="capacity");
-      const wsCapSum   = capR.filter(r=>WORKSPACE_IDS.includes(r.groupId)&&r.groupId!=="open").reduce((a,r)=>a+Math.round(r.count*(r.seatWeight??1)),0);
-      const openCapSum = capR.filter(r=>r.groupId==="open").reduce((a,r)=>a+Math.round(r.count*(r.seatWeight??1)),0);
-      const meCapSum   = capR.filter(r=>r.groupId==="me").reduce((a,r)=>a+Math.round(r.count*(r.seatWeight??1)),0);
-      return wsCapSum+openCapSum+meCapSum;
+      return {seats,spaces};
     };
-    // Binary search the desk % that hits exactCapTarget.
-    let lo=0.50, hi=0.99;
-    for(let i=0;i<60;i++){ const mid=(lo+hi)/2; if(simulateCap(mid)>exactCapTarget) hi=mid; else lo=mid; }
-    const solved = parseFloat(((lo+hi)/2).toFixed(4));
-    setRatios(r=>({...r,desks:solved}));
+    // M&E capacity seats — unchanged by auto-fit, but part of the density total.
+    let meSeats = 0;
+    allSp.forEach(sp=>{
+      if(sp.type!=="capacity" || sp.groupId!=="me") return;
+      const rawR = ratios[sp.id]??0;
+      let n = sp.fixedCount ? (fixedExcluded.has(sp.id)?0:sp.fixedCount) : Math.round(pRef*rawR);
+      if(TRAINING_IDS.includes(sp.id) && rawR>0 && n<1) n = 1;
+      const seatsPer = spaceSeats[sp.id] ?? sp.seatsPerSpace ?? 1;
+      const s = sp.seatsPerSpace ? n*seatsPer : n;
+      meSeats += Math.round(s*(sp.seatWeight??1));
+    });
+
+    // Split the non-M&E capacity pool 85/15 between desks and the other bars.
+    const pool       = Math.max(1, target - meSeats);
+    const deskTarget = Math.round(TARGET_DESK_SHARE * pool);
+    const otherTarget= pool - deskTarget;
+
+    const other0 = simOther(1).seats;
+    const f = other0>0 ? otherTarget/other0 : 1;           // scale factor for other bars
+    const newRatios = {...ratios};
+    allSp.forEach(sp=>{ if(isOtherCap(sp)) newRatios[sp.id] = parseFloat(((ratios[sp.id]??0)*f).toFixed(4)); });
+
+    // Set the desks % so its derived seat count equals deskTarget.
+    // deskCount = (dPct * otherSpaces)/(1 - dPct)  →  dPct = deskCount/(deskCount + otherSpaces).
+    const otherSpaces = simOther(f).spaces;
+    const dPct = deskTarget>0 ? deskTarget/(deskTarget+otherSpaces) : 0;
+    newRatios.desks = parseFloat(dPct.toFixed(4));
+    setRatios(newRatios);
   }
 
   const baseRatios = useMemo(()=>computeRatios(tierId,region,TIERS),[tierId,region,TIERS]);
@@ -996,7 +1029,6 @@ export default function App() {
                     ["micro_phone","Phone Room (Micro)",true],
                     ["phone_room","Phone Room",false],
                     ["phone_room_av","Phone Room (AV)",false],
-                    ["meeting_pod","Meeting Pod",false],
                   ];
                   const rooms = items.map(([id,label,inaccessible])=>({id,label,inaccessible,rooms:rowFor(id)?.rooms??0}));
                   const total = rooms.reduce((a,r)=>a+r.rooms,0);
@@ -1037,6 +1069,59 @@ export default function App() {
                           background:over?`${RED}12`:`${GREEN}12`,border:`1px solid ${over?RED:GREEN}44`,color:over?RED:GREEN}}>
                           {total===0 ? "No 1 & 2-person spaces yet."
                             : over ? `Over the 50% limit — reduce Focus Pods / Phone Rooms (Micro) to ${maxInaccess} or fewer, or add more accessible rooms.`
+                            : "Within the 50% accessibility limit."}
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </Panel>
+
+              {/* Meeting Pods & Huddle Rooms — small-group collaboration */}
+              <Panel title="Meeting Pods & Huddle Rooms">
+                {(()=>{
+                  const rowFor = id => results.find(r=>r.id===id);
+                  const items = [
+                    ["meeting_pod","Meeting Pod",true],
+                    ["huddle_room","Huddle Room",false],
+                  ];
+                  const rooms = items.map(([id,label,inaccessible])=>({id,label,inaccessible,rooms:rowFor(id)?.rooms??0}));
+                  const total = rooms.reduce((a,r)=>a+r.rooms,0);
+                  const podN = rooms.find(r=>r.id==="meeting_pod")?.rooms??0;
+                  const podPct = total>0 ? (podN/total)*100 : 0;
+                  const over = podPct>50;
+                  const maxInaccess = Math.floor(total*0.5);
+                  return (
+                    <>
+                      <div style={{fontSize:11,color:SF_SUBTLE,marginBottom:12,lineHeight:1.4}}>
+                        Small-group collaboration rooms. The bar shows the split between Meeting Pods and Huddle Rooms.
+                      </div>
+                      {rooms.map(r=>(
+                        <div key={r.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
+                          <span style={{width:8,height:8,borderRadius:"50%",background:r.id==="meeting_pod"?SF_BLUE:GREEN,flexShrink:0}}/>
+                          <span style={{flex:1,fontSize:12,color:SF_GRAY_700,fontWeight:600}}>
+                            {r.label}
+                            {r.inaccessible&&<span style={{fontSize:9,fontWeight:700,color:AMBER,background:`${AMBER}18`,border:`1px solid ${AMBER}55`,borderRadius:4,padding:"1px 5px",marginLeft:6}}>not accessible</span>}
+                          </span>
+                          <span style={{fontSize:14,fontWeight:700,color:SF_NAVY,fontVariantNumeric:"tabular-nums"}}>{r.rooms}</span>
+                        </div>
+                      ))}
+                      <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid #f0f0f0"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:8}}>
+                          <span style={{color:SF_GRAY_700,fontWeight:600}}>Total</span>
+                          <span style={{color:SF_NAVY,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{total}</span>
+                        </div>
+                        <div style={{position:"relative",height:8,background:GREEN,borderRadius:4,overflow:"hidden"}}>
+                          <div style={{position:"absolute",left:0,top:0,height:"100%",width:`${Math.min(podPct,100)}%`,background:SF_BLUE,borderRadius:total>0&&podPct<100?"4px 0 0 4px":4,transition:"width 0.3s"}}/>
+                        </div>
+                        <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:SF_SUBTLE,marginTop:5}}>
+                          <span style={{color:SF_BLUE,fontWeight:700}}>Meeting Pods {podPct.toFixed(0)}%</span>
+                          <span style={{color:GREEN,fontWeight:700}}>Huddle Rooms {total>0?(100-podPct).toFixed(0):0}%</span>
+                        </div>
+                        <div style={{marginTop:8,padding:"8px 10px",borderRadius:7,fontSize:11,fontWeight:600,lineHeight:1.4,
+                          background:over?`${RED}12`:`${GREEN}12`,border:`1px solid ${over?RED:GREEN}44`,color:over?RED:GREEN}}>
+                          {total===0 ? "No meeting pods or huddle rooms yet."
+                            : over ? `Over the 50% limit — reduce Meeting Pods to ${maxInaccess} or fewer, or add more Huddle Rooms.`
                             : "Within the 50% accessibility limit."}
                         </div>
                       </div>
