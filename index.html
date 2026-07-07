@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Salesforce Space Planning Calculator</title>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
       /* Salesforce Sans is not publicly available via CDN outside Salesforce network.
-         Inter is the closest approved alternative for external tools. */
+         No external font import — falls back to the system sans-serif stack so the
+         file stays fully self-contained (needed for single-file HTML). */
       :root {
         --sf-font: 'Inter', 'Salesforce Sans', Arial, sans-serif;
       }
