@@ -838,7 +838,7 @@ export default function App() {
         </div>
         {/* Tab navigation */}
         <div style={{maxWidth:1400,margin:"0 auto",padding:"0 24px",display:"flex",borderTop:"1px solid rgba(255,255,255,0.1)"}}>
-          {[["program","Building Program"],["calc","Calculator"],["results","Results"],["comparison","Comparison"],["tiers","Tiers & Regions"],["db","Space Types"]].map(([id,label])=>(
+          {[["program","Building Program"],["calc","Calculator"],["results","Results"],["comparison","Comparison"],["tiers","Tiers & Regions"],["bu","Business Units"],["db","Space Types"]].map(([id,label])=>(
             <button key={id} onClick={()=>setTab(id)} style={{background:"none",border:"none",color:tab===id?"#fff":"rgba(255,255,255,0.55)",padding:"10px 16px",cursor:"pointer",fontSize:13,borderBottom:tab===id?`2px solid ${SF_BLUE}`:"2px solid transparent",fontWeight:tab===id?700:400,letterSpacing:tab===id?"0.01em":"normal",transition:"color 0.15s"}}>{label}</button>
           ))}
         </div>
@@ -1647,6 +1647,22 @@ export default function App() {
           </div>
           );
         })()}
+
+        {/* ── BUSINESS UNITS ── */}
+        {tab==="bu" && (
+          <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"64px 24px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textAlign:"center",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+            <div style={{width:56,height:56,borderRadius:14,background:SF_BLUE_LIGHT,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:18}}>
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="3" y="10" width="7" height="11" rx="1" stroke={SF_BLUE} strokeWidth="1.6"/>
+                <rect x="14" y="4" width="7" height="17" rx="1" stroke={SF_BLUE} strokeWidth="1.6"/>
+                <path d="M2 21h20" stroke={SF_BLUE} strokeWidth="1.6" strokeLinecap="round"/>
+                <path d="M6 14h1M6 17h1M17 8h1M17 11h1M17 14h1" stroke={SF_BLUE} strokeWidth="1.4" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <div style={{fontSize:22,fontWeight:700,color:SF_NAVY,marginBottom:8}}>Business Units</div>
+            <div style={{fontSize:14,color:SF_SUBTLE,fontWeight:600,maxWidth:420}}>Coming soon — allocate space and seats across business units.</div>
+          </div>
+        )}
 
         {/* ── SPACE TYPES ── */}
         {tab==="db" && (
