@@ -878,7 +878,7 @@ export default function App() {
         {/* Stat cards — visible on all tabs except Building Program */}
         {tab!=="program" && (
         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>
-          <StatCard label="Capacity Seats" value={summary.cap.toLocaleString()} accent="#70BF75" sub={<>Target: <span style={{color:dsc,fontWeight:700}}>{targetCapMin}–{targetCapMax}</span>{summary.meCap>0&&<span style={{color:SF_SUBTLE}}> · M&amp;E ×0.75</span>}</>}/>
+          <StatCard label="Capacity Seats" value={summary.cap.toLocaleString()} accent="#70BF75" sub={<>Target: <span style={{color:dsc,fontWeight:700}}>{targetCapMin}–{targetCapMax}</span></>}/>
           <StatCard label="Total Seats" value={summary.total.toLocaleString()} accent="#7B68EE" sub="Cap + Non-Cap"/>
           <StatCard label="SF / Cap Seat" value={summary.actualDensity||"—"} accent={dsc} sub={<span style={{color:dsc}}>{sLabel(summary.dStatus)}</span>}/>
           <StatCard label="Total ASF" value={effectiveAsf>=1000?`${(effectiveAsf/1000).toFixed(0)}k`:effectiveAsf} accent="#F4A460" sub={`Workspace: ${workspaceAsf>=1000?(workspaceAsf/1000).toFixed(0)+"k":workspaceAsf} SF`}/>
