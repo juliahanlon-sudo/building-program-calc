@@ -808,7 +808,7 @@ export default function App() {
               <span style={{color:"#fff",fontSize:16,fontWeight:700}}>⬡</span>
             </div>
             <div>
-              <div style={{fontSize:11,letterSpacing:"0.18em",color:SF_CLOUD,fontWeight:600,textTransform:"uppercase",lineHeight:1}}>Workplace Strategy</div>
+              <div style={{fontSize:15,letterSpacing:"0.14em",color:SF_CLOUD,fontWeight:600,textTransform:"uppercase",lineHeight:1.1}}>Salesforce Workplace Design</div>
               <div style={{fontSize:16,fontWeight:700,color:"#fff",lineHeight:1.2,marginTop:2}}>Space Planning Calculator</div>
             </div>
             {city&&<div style={{fontSize:12,color:"rgba(255,255,255,0.6)",marginLeft:8,paddingLeft:12,borderLeft:"1px solid rgba(255,255,255,0.2)"}}>{city}</div>}
@@ -835,7 +835,7 @@ export default function App() {
 
         {/* Print-only header */}
         <div className="print-only" style={{display:"none",marginBottom:20}}>
-          <div style={{fontSize:10,letterSpacing:"0.2em",color:SF_BLUE}}>WORKPLACE STRATEGY — SALESFORCE SPACE PLANNING CALCULATOR</div>
+          <div style={{fontSize:10,letterSpacing:"0.2em",color:SF_BLUE}}>SALESFORCE WORKPLACE DESIGN — SPACE PLANNING CALCULATOR</div>
           {city && <div style={{fontSize:16,fontWeight:700,color:SF_NAVY,marginTop:4}}>{city}</div>}
           <div style={{fontSize:12,color:"#888",marginTop:2}}>Generated {new Date().toLocaleDateString()}</div>
         </div>
