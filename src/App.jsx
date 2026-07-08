@@ -176,7 +176,7 @@ const SPACE_GROUPS = [
   // ── M&E ─────────────────────────────────────────────────────────────────
   { id:"me", label:"M&E", superGroup:"amenity", color:"#ff8000", spaces:[
     { id:"auditorium",       label:"Auditorium",           type:"capacity",     sf:2000, baseRatio:0, seatsPerSpace:150, seatWeight:0.75, regionMult:{AMER:1.00,EMEA:0.90,JAPAC:0.85,India:0.90,LATAM:0.85} },
-    { id:"pre_function",     label:"Pre-Function Space",   type:"capacity",     sf:1500, baseRatio:0, seatsPerSpace:50, seatWeight:0.75, regionMult:{AMER:1.00,EMEA:0.95,JAPAC:0.90,India:0.85,LATAM:0.90} },
+    { id:"pre_function",     label:"Pre-Function Space",   type:"non-capacity", sf:1500, baseRatio:0, seatsPerSpace:50, regionMult:{AMER:1.00,EMEA:0.95,JAPAC:0.90,India:0.85,LATAM:0.90} },
     { id:"training_l",       label:"Training Room (L)",    type:"capacity",     sf:1000, baseRatio:0, seatsPerSpace:50, seatWeight:0.75, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.10,LATAM:0.90} },
     { id:"training_m",       label:"Training Room (M)",    type:"capacity",     sf:700,  baseRatio:0, seatsPerSpace:32, seatWeight:0.75, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.10,LATAM:0.90} },
     { id:"training_s",       label:"Training Room (S)",    type:"capacity",     sf:500,  baseRatio:0, seatsPerSpace:24, seatWeight:0.75, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.10,LATAM:0.90} },
@@ -190,10 +190,10 @@ const SPACE_GROUPS = [
     { id:"childcare_bld",    label:"Childcare",                type:"none", sf:600, baseRatio:0, seatsPerSpace:20, regionMult:{AMER:1.00,EMEA:0.70,JAPAC:0.60,India:0.50,LATAM:0.60} },
     { id:"command_center",   label:"Command Center",           type:"capacity", sf:400, baseRatio:0, seatsPerSpace:10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"critical_incident",label:"Critical Incident Center", type:"capacity", sf:300, baseRatio:0, seatsPerSpace:12, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
-    { id:"csirt",            label:"CSIRT",                    type:"non-capacity", sf:300, baseRatio:0, seatsPerSpace:12, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
+    { id:"csirt",            label:"CSIRT",                    type:"capacity", sf:300, baseRatio:0, seatsPerSpace:12, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"fitness_bld",      label:"Fitness Center",           type:"none", sf:800, baseRatio:0, seatsPerSpace:15, regionMult:{AMER:1.00,EMEA:0.80,JAPAC:0.70,India:0.60,LATAM:0.70} },
     { id:"game_room",        label:"Game Room",                type:"non-capacity", sf:300, baseRatio:0, seatsPerSpace:4, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
-    { id:"go_center",        label:"Go Center",                type:"non-capacity", sf:200, baseRatio:0, seatsPerSpace:10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
+    { id:"go_center",        label:"Go Center",                type:"capacity", sf:200, baseRatio:0, seatsPerSpace:10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"it_provisioning",  label:"IT Provisioning",          type:"non-capacity", sf:150, baseRatio:0, seatsPerSpace:4, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"lab",              label:"Lab",                      type:"non-capacity", sf:400, baseRatio:0, seatsPerSpace:10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"media_room",       label:"Media Room",               type:"non-capacity", sf:200, baseRatio:0, seatsPerSpace:3, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
@@ -201,7 +201,7 @@ const SPACE_GROUPS = [
     { id:"mobility_lab",     label:"Mobility Lab",             type:"non-capacity", sf:300, baseRatio:0, seatsPerSpace:3, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"outdoor_terrace",  label:"Outdoor / Terrace",        type:"non-capacity", sf:500, baseRatio:0, regionMult:{AMER:1.00,EMEA:0.60,JAPAC:0.70,India:0.80,LATAM:1.20} },
     { id:"pantry_bld",       label:"Pantry",                   type:"none", sf:200, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
-    { id:"sre",              label:"Site Reliability Eng.",    type:"non-capacity", sf:300, baseRatio:0, seatsPerSpace:8, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
+    { id:"sre",              label:"Site Reliability Eng.",    type:"capacity", sf:300, baseRatio:0, seatsPerSpace:8, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"staging_room",     label:"Staging / Green Room",     type:"none", sf:100, baseRatio:0, seatsPerSpace:4, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"techforce",        label:"Techforce",                type:"non-capacity", sf:200, baseRatio:0, seatsPerSpace:4, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"techforce_lab",    label:"Techforce Lab",            type:"non-capacity", sf:300, baseRatio:0, seatsPerSpace:6, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
@@ -213,12 +213,12 @@ const SPACE_GROUPS = [
     { id:"barista_bar",         label:"Barista Bar",                      type:"non-capacity", sf:150, baseRatio:0, seatsPerSpace:4, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"cafeteria",           label:"Cafeteria",                        type:"non-capacity", sf:800, baseRatio:0, seatsPerSpace:60, regionMult:{AMER:1.00,EMEA:1.10,JAPAC:1.10,India:1.20,LATAM:1.10} },
     { id:"trailblazer_hub",     label:"Community Trailblazer Hub",        type:"non-capacity", sf:400, baseRatio:0, seatsPerSpace:20, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
-    { id:"customer_conf",       label:"Customer - Conference Room",       type:"non-capacity", sf:250, baseRatio:0, seatsPerSpace:22, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
+    { id:"customer_conf",       label:"Customer - Conference Room",       type:"capacity", sf:250, baseRatio:0, seatsPerSpace:22, seatWeight:0.75, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"customer_huddle",     label:"Customer - Huddle Room",           type:"non-capacity", sf:120, baseRatio:0, seatsPerSpace:5, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"customer_phone",      label:"Customer - Phone Room",            type:"non-capacity", sf:50,  baseRatio:0, seatsPerSpace:1, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
-    { id:"customer_work_room",  label:"Customer Work Room",               type:"non-capacity", sf:150, baseRatio:0, seatsPerSpace:4, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
+    { id:"customer_work_room",  label:"Customer Work Room",               type:"capacity", sf:150, baseRatio:0, seatsPerSpace:4, seatWeight:0.75, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"demo_area",           label:"Demo Area",                        type:"non-capacity", sf:300, baseRatio:0, seatsPerSpace:8, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
-    { id:"ohana_conf",          label:"Ohana - Conference Room",          type:"non-capacity", sf:250, baseRatio:0, seatsPerSpace:16, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
+    { id:"ohana_conf",          label:"Ohana - Conference Room",          type:"capacity", sf:250, baseRatio:0, seatsPerSpace:16, seatWeight:0.75, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"ohana_dining",        label:"Ohana - Exhibition Dining",        type:"non-capacity", sf:600, baseRatio:0, seatsPerSpace:22, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"ohana_kitchen",       label:"Ohana - Exhibition Kitchen (FOH)", type:"non-capacity", sf:400, baseRatio:0, seatsPerSpace:5, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"ohana_huddle",        label:"Ohana - Huddle Room",              type:"non-capacity", sf:500, baseRatio:0, seatsPerSpace:5, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
@@ -239,15 +239,15 @@ const SPACE_GROUPS = [
     { id:"built_out",     label:"Built Out Zone",             type:"none", sf:200, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"coat_closet",   label:"Coat Closet",                type:"none", sf:50,  baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"comm_stair",    label:"Communicating Stair",        type:"none", sf:300, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
-    { id:"copy_print",    label:"Copy Print Center",          type:"none", sf:80,  baseRatio:0.15, regionMult:{AMER:1.00,EMEA:0.90,JAPAC:0.85,India:1.20,LATAM:0.90} },
+    { id:"copy_print",    label:"Copy Print Center",          type:"none", sf:80,  baseRatio:0.15, floorRule:{type:"everyNFloors",n:3}, regionMult:{AMER:1.00,EMEA:0.90,JAPAC:0.85,India:1.20,LATAM:0.90} },
     { id:"cubbies",       label:"Cubbies",                    type:"none", sf:20,  baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
-    { id:"idf",           label:"IDF",                        type:"none", sf:100, baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
+    { id:"idf",           label:"IDF",                        type:"none", sf:100, baseRatio:0.10, floorRule:{type:"perFloor"}, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"irrigation",    label:"Irrigation Room",            type:"none", sf:80,  baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"janitor",       label:"Janitor Closet",             type:"none", sf:50,  baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"lobby",         label:"Lobby",                      type:"none", sf:300, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"locker_room",   label:"Locker Room",                type:"none", sf:150, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"mail_center",   label:"Mail Center",                type:"non-capacity", sf:150, baseRatio:0, seatsPerSpace:2, regionMult:{AMER:1.00,EMEA:0.80,JAPAC:0.70,India:0.80,LATAM:0.80} },
-    { id:"mdf",           label:"MDF",                        type:"none", sf:150, baseRatio:0.05, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
+    { id:"mdf",           label:"MDF",                        type:"none", sf:150, baseRatio:0.05, floorRule:{type:"perBuilding"}, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"millwork",      label:"Millwork & Trash/Recycling", type:"none", sf:7,   baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"office_svc",    label:"Office Services Supply Rm",  type:"none", sf:100, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"restroom",      label:"Restroom",                   type:"none", sf:200, baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
@@ -264,6 +264,28 @@ const TRAINING_IDS = ["training_l","training_m","training_s"];
 
 function allSpaces() {
   return SPACE_GROUPS.flatMap(g => g.spaces.map(sp => ({...sp, groupId:g.id, superGroup:g.superGroup})));
+}
+
+// Count for a space whose quantity is driven by the number of levels/floors:
+//   perFloor      → 1 on every floor
+//   everyNFloors  → 1 on every Nth floor (min 1 for the building)
+//   perBuilding   → exactly 1 for the whole building
+function floorRuleCount(rule, floors){
+  const f = Math.max(1, floors||1);
+  if(!rule) return null;
+  if(rule.type==="perFloor")     return f;
+  if(rule.type==="perBuilding")  return 1;
+  if(rule.type==="everyNFloors") return Math.max(1, Math.ceil(f/(rule.n||1)));
+  return null;
+}
+
+// Short human descriptor for a floor rule, shown next to floor-driven spaces.
+function floorRuleLabel(rule){
+  if(!rule) return "";
+  if(rule.type==="perFloor")     return "1 per floor";
+  if(rule.type==="perBuilding")  return "1 per building";
+  if(rule.type==="everyNFloors") return `1 every ${rule.n} floors`;
+  return "";
 }
 
 function computeRatios(tierId, regionId, tiers=DEFAULT_TIERS) {
@@ -481,8 +503,18 @@ function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSea
       </div>
       {/* Controls */}
       <div style={{display:"flex",alignItems:"center",gap:14,flexShrink:0}}>
-        {/* Fixed-count spaces keep the Include/Exclude toggle; others show their % share */}
-        {sp.fixedCount ? (
+        {/* Floor-driven spaces (IDF, Copy Print, MDF) show their level rule + a toggle. */}
+        {sp.floorRule ? (
+          <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6,width:COL.share}}>
+            <button onClick={()=>toggleFixed(sp.id)} title={floorRuleLabel(sp.floorRule)} style={{
+              padding:"3px 8px",borderRadius:6,border:"1px solid #FCC00355",cursor:"pointer",fontSize:10,fontWeight:700,whiteSpace:"nowrap",
+              background:fixedExcluded.has(sp.id)?"#f0f0f0":"#FFF7DE",
+              color:fixedExcluded.has(sp.id)?"#aaa":"#8a6d00"
+            }}>
+              {floorRuleLabel(sp.floorRule)}
+            </button>
+          </div>
+        ) : sp.fixedCount ? (
           <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",width:COL.share}}>
             <button onClick={()=>toggleFixed(sp.id)} title="1 per floor" style={{
               padding:"4px 10px",borderRadius:6,border:"none",cursor:"pointer",fontSize:11,fontWeight:600,
@@ -500,7 +532,7 @@ function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSea
           </div>
         )}
         {/* Spaces — editable for ratio-driven rows; read-only for fixed-count / auto Techforce */}
-        {(sp.fixedCount || sp.id==="techforce" || sp.id==="techforce_lab")
+        {(sp.floorRule || sp.fixedCount || sp.id==="techforce" || sp.id==="techforce_lab")
           ? <ColVal label="Spaces" value={spaces} color={bc} bg={bb} bold/>
           : <EditableCount label="Spaces" value={spaces} color={bb} bc={bc}
               onCommit={c=>{
@@ -747,7 +779,12 @@ export default function App() {
     const pass1 = allSp.map(sp=>{
       if (sp.isDeskPct||sp.isRoomType) return {...sp,count:0,spaces:0,sf:sfOver[sp.id]??sp.sf,totalSf:0,rooms:0};
       const rawR = ratios[sp.id]??0;
-      let spaces = sp.fixedCount ? (fixedExcluded.has(sp.id) ? 0 : sp.fixedCount) : Math.round(planRef*rawR);
+      // Floor-driven spaces (IDF per floor, Copy Print every 3rd floor, MDF per
+      // building) derive their count from the level count, not a ratio.
+      const frCount = floorRuleCount(sp.floorRule, bpcFloors);
+      let spaces = frCount!=null
+        ? (fixedExcluded.has(sp.id) ? 0 : frCount)
+        : sp.fixedCount ? (fixedExcluded.has(sp.id) ? 0 : sp.fixedCount) : Math.round(planRef*rawR);
       // Seeded training rooms: guarantee at least one so small T1/T2 plans still have M&E.
       if(TRAINING_IDS.includes(sp.id) && rawR>0 && spaces<1) spaces = 1;
       const seatsPer = sp.seatsPerSpace ? (spaceSeats[sp.id] ?? sp.seatsPerSpace) : 1;
@@ -783,7 +820,7 @@ export default function App() {
       const sf = sfOver[sp.id]??sp.sf;
       return {...sp,count:rooms*seatsPer,sf,totalSf:rooms*sf,rooms,seatsPer,effectiveN:effN};
     });
-  },[planRef,ratios,sfOver,roomSeats,spaceSeats,fixedExcluded]);
+  },[planRef,ratios,sfOver,roomSeats,spaceSeats,fixedExcluded,bpcFloors]);
 
   // Bases needed to back-solve a ratio from a typed Spaces count (editable Spaces field).
   const capBases = useMemo(()=>{
@@ -803,11 +840,15 @@ export default function App() {
                        .reduce((a,r)=>a+Math.round(r.count*(r.seatWeight??1)),0);
     const meCap    = capResults.filter(r=>r.groupId==="me")
                        .reduce((a,r)=>a+Math.round(r.count*(r.seatWeight??1)),0);
-    const cap    = wsCap + openCap + meCap;
+    // Capacity spaces outside the workspace/open/M&E buckets (e.g. the ×0.75
+    // customer & hospitality conference/demo rooms, command/critical centers).
+    const otherCap = capResults.filter(r=>!WORKSPACE_IDS.includes(r.groupId)&&r.groupId!=="me")
+                       .reduce((a,r)=>a+Math.round(r.count*(r.seatWeight??1)),0);
+    const cap    = wsCap + openCap + meCap + otherCap;
     const noncap = results.filter(r=>r.type==="non-capacity").reduce((a,r)=>a+r.count,0);
     const refCap = inputMode==="seats" ? pinnedSeats : cap;
     const actualDensity = refCap>0 ? Math.round(workspaceAsf/refCap) : 0;
-    return {cap,wsCap,openCap,meCap,noncap,total:cap+noncap,asfMin:cap*densityMin,asfMax:cap*densityMax,actualDensity,dStatus:densityStatus(actualDensity,densityMax,densityMin)};
+    return {cap,wsCap,openCap,meCap,otherCap,noncap,total:cap+noncap,asfMin:cap*densityMin,asfMax:cap*densityMax,actualDensity,dStatus:densityStatus(actualDensity,densityMax,densityMin)};
   },[results,workspaceAsf,densityMin,densityMax,inputMode,pinnedSeats]);
 
   // Actual SF share per super-group vs. the tier's target allocation, so the plan
@@ -1069,6 +1110,16 @@ export default function App() {
                   <div style={{fontSize:11,color:SF_SUBTLE,marginTop:4}}>Synced with Building Program tab</div>
                 </Field>
 
+                <Field label="Levels (Floors)">
+                  <input type="number" min={1} step={1}
+                    value={bpcFloors}
+                    onChange={e=>syncBpcFloors(Math.max(1,Number(e.target.value)||1))}
+                    style={iStyle}/>
+                  <div style={{fontSize:11,color:SF_SUBTLE,marginTop:4}}>
+                    {bpcFloors===1 ? "1 level" : `${bpcFloors} levels`} · ~{Math.round(bpcAsfValue/Math.max(1,bpcFloors)).toLocaleString()} ASF / level
+                  </div>
+                </Field>
+
                 <div style={{background:"#f0f8ff",border:"1px solid #0176D322",borderRadius:8,padding:"10px 12px",marginBottom:8}}>
                   <div style={{fontSize:10,letterSpacing:"0.1em",color:SF_BLUE,textTransform:"uppercase",fontWeight:700,marginBottom:8}}>Workspace SF ({Math.round(wsFrac*100)}% of total)</div>
                   <CalcRow label="Workspace ASF" value={`${workspaceAsf.toLocaleString()} SF`} bold accent={SF_BLUE}/>
@@ -1210,6 +1261,7 @@ export default function App() {
                   if(summary.wsCap>0)   parts.push(`${summary.wsCap} ws`);
                   if(summary.openCap>0) parts.push(`${summary.openCap} open`);
                   if(summary.meCap>0)   parts.push(`${summary.meCap} M&E`);
+                  if(summary.otherCap>0) parts.push(`${summary.otherCap} other`);
                   return parts.length>0 ? parts.join(" + ") : `Target ${targetCapMin}–${targetCapMax}`;
                 })()} subColor={dsc}/>
                 <div style={{width:1,background:"#e0e0e0",alignSelf:"stretch",margin:"0 12px"}}/>
