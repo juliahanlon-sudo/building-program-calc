@@ -357,7 +357,7 @@ function SeatStat({label,value,color,bold,sub,subColor}) {
 }
 
 // Shared column widths for consistent alignment across all row types
-const COL = { ratio:130, pct:44, spaces:56, seats:56 };
+const COL = { ratio:130, pct:44, spaces:56, seats:56, share:78 };
 
 function ColVal({label,value,color,bg,bold}) {
   return (
@@ -481,25 +481,20 @@ function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSea
       </div>
       {/* Controls */}
       <div style={{display:"flex",alignItems:"center",gap:14,flexShrink:0}}>
-        {/* Slider + % — hidden for fixed-count spaces */}
+        {/* Fixed-count spaces keep the Include/Exclude toggle; others show their % share */}
         {sp.fixedCount ? (
-          <div style={{display:"flex",alignItems:"center",gap:8,width:COL.ratio+COL.pct+10}}>
-            <button onClick={()=>toggleFixed(sp.id)} style={{
-              padding:"4px 12px",borderRadius:6,border:"none",cursor:"pointer",fontSize:11,fontWeight:600,
+          <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",width:COL.share}}>
+            <button onClick={()=>toggleFixed(sp.id)} title="1 per floor" style={{
+              padding:"4px 10px",borderRadius:6,border:"none",cursor:"pointer",fontSize:11,fontWeight:600,
               background:fixedExcluded.has(sp.id)?"#f0f0f0":"#E8F4FD",
               color:fixedExcluded.has(sp.id)?"#aaa":SF_BLUE
             }}>
               {fixedExcluded.has(sp.id)?"Excluded":"Included"}
             </button>
-            <span style={{fontSize:10,color:SF_LABEL,fontStyle:"italic"}}>1 per floor</span>
           </div>
         ) : (
-          <div style={{display:"flex",alignItems:"center",gap:6,width:COL.ratio+COL.pct+10}}>
-            <input type="range" min={0} max={sp.isDeskPct?1:0.5} step={sp.isDeskPct?0.01:0.005}
-              value={ratios[sp.id]??(sp.isDeskPct?0.90:0)}
-              onChange={e=>setRatios(r=>({...r,[sp.id]:parseFloat(e.target.value)}))}
-              style={{flex:1,accentColor:SF_BLUE,cursor:"pointer"}}/>
-            <span style={{fontSize:12,width:COL.pct,textAlign:"right",fontVariantNumeric:"tabular-nums",color:showPct?SF_NAVY:SF_GRAY_700,fontWeight:showPct?700:600,flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",width:COL.share}}>
+            <span style={{fontSize:13,fontVariantNumeric:"tabular-nums",color:showPct?SF_NAVY:SF_GRAY_700,fontWeight:showPct?700:600}}>
               {showPct ? `${sharePct.toFixed(1)}%` : ""}
             </span>
           </div>
@@ -815,6 +810,21 @@ export default function App() {
     return {cap,wsCap,openCap,meCap,noncap,total:cap+noncap,asfMin:cap*densityMin,asfMax:cap*densityMax,actualDensity,dStatus:densityStatus(actualDensity,densityMax,densityMin)};
   },[results,workspaceAsf,densityMin,densityMax,inputMode,pinnedSeats]);
 
+  // Actual SF share per super-group vs. the tier's target allocation, so the plan
+  // can be reconciled against the tier's workspace/amenity/support breakdown.
+  const allocMix = useMemo(()=>{
+    const totalSf = results.reduce((a,r)=>a+(r.totalSf??0),0);
+    return SUPER_GROUPS.map(sg=>{
+      const sf = results.filter(r=>r.superGroup===sg.id).reduce((a,r)=>a+(r.totalSf??0),0);
+      const actual = totalSf>0 ? sf/totalSf : 0;
+      const target = tier?.superAlloc?.[sg.id] ?? 0;
+      const diff = actual - target;
+      // Within 3 percentage points of target = on-target; else over/under.
+      const status = Math.abs(diff) <= 0.03 ? "ok" : (diff > 0 ? "over" : "under");
+      return {id:sg.id,label:sg.label,color:sg.color,sf,actual,target,diff,status};
+    });
+  },[results,tier]);
+
   // ── Auto-fit ───────────────────────────────────────────────────────────
   // Pin Desks to ~85% of the workspace + open-collaboration capacity seats and
   // scale the OTHER capacity bars (touchdown, library, work room, booths, cafe
@@ -968,8 +978,9 @@ export default function App() {
           <div style={{fontSize:12,color:"#888",marginTop:2}}>Generated {new Date().toLocaleDateString()}</div>
         </div>
 
-        {/* Stat cards — visible on all tabs except Building Program */}
-        {tab!=="program" && (
+        {/* Stat cards — hidden on Building Program (own layout), Calculator (seat
+            summary bar duplicates these), and Results (own 4-card grid duplicates these) */}
+        {tab!=="program" && tab!=="calc" && tab!=="results" && (
         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>
           <StatCard label="Capacity Seats" value={summary.cap.toLocaleString()} accent="#70BF75" sub={<>Target: <span style={{color:dsc,fontWeight:700}}>{targetCapMin}–{targetCapMax}</span></>}/>
           <StatCard label="Total Seats" value={summary.total.toLocaleString()} accent="#7B68EE" sub="Cap + Non-Cap"/>
@@ -978,7 +989,7 @@ export default function App() {
         </div>
         )}
         {tab==="calc" && (
-          <div style={{display:"grid",gridTemplateColumns:"275px 1fr",gap:16,alignItems:"start"}}>
+          <div style={{display:"grid",gridTemplateColumns:"275px minmax(0,900px)",gap:16,alignItems:"start",justifyContent:"center"}}>
             <div style={{display:"flex",flexDirection:"column",gap:12}}>
               <Panel title="Configuration">
                 <Field label="City / Location"><input type="text" value={city} placeholder="e.g. San Francisco, CA" onChange={e=>setCity(e.target.value)} style={{...iStyle,fontWeight:400}}/></Field>
@@ -1014,20 +1025,36 @@ export default function App() {
                 </div>
                 {tier&&(
                   <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid #f0f0f0"}}>
-                    <div style={{fontSize:10,letterSpacing:"0.1em",color:SF_LABEL,textTransform:"uppercase",marginBottom:10}}>Allocation</div>
-                    {SUPER_GROUPS.map(sg=>{
-                      const pct = Math.round((tier.superAlloc[sg.id]??0)*100);
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
+                      <span style={{fontSize:10,letterSpacing:"0.1em",color:SF_LABEL,textTransform:"uppercase"}}>Allocation — Actual vs. Target</span>
+                    </div>
+                    {allocMix.map(m=>{
+                      const sc = m.status==="ok"?GREEN:m.status==="over"?AMBER:RED;
+                      const actualPct = Math.round(m.actual*100);
+                      const targetPct = Math.round(m.target*100);
+                      const diffPts = Math.round(m.diff*100);
                       return (
-                        <div key={sg.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,fontSize:11}}>
-                          <div style={{width:8,height:8,borderRadius:"50%",background:sg.color,flexShrink:0}}/>
-                          <span style={{flex:1,color:"#444",fontWeight:600}}>{sg.label}</span>
-                          <span style={{color:SF_NAVY,fontWeight:700,width:26,textAlign:"right",flexShrink:0}}>{pct}%</span>
-                          <div style={{width:50,height:5,background:"#eee",borderRadius:3,overflow:"hidden",flexShrink:0}}>
-                            <div style={{width:`${pct}%`,height:"100%",background:sg.color,borderRadius:3}}/>
+                        <div key={m.id} style={{marginBottom:9}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8,fontSize:11,marginBottom:3}}>
+                            <div style={{width:8,height:8,borderRadius:"50%",background:m.color,flexShrink:0}}/>
+                            <span style={{flex:1,color:"#444",fontWeight:600}}>{m.label}</span>
+                            <span style={{color:sc,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{actualPct}%</span>
+                            <span style={{color:SF_SUBTLE,fontSize:10,width:52,textAlign:"right",flexShrink:0}}>/ {targetPct}% tgt</span>
+                            <span style={{fontSize:12,width:14,textAlign:"center",flexShrink:0}} title={m.status==="ok"?"On target":`${diffPts>0?"+":""}${diffPts} pts vs target`}>
+                              {m.status==="ok"?"✓":"⚠"}
+                            </span>
+                          </div>
+                          {/* actual bar with a target marker line */}
+                          <div style={{position:"relative",height:6,background:"#eee",borderRadius:3,overflow:"hidden",marginLeft:16}}>
+                            <div style={{width:`${Math.min(actualPct,100)}%`,height:"100%",background:sc,borderRadius:3,transition:"width 0.3s"}}/>
+                            <div style={{position:"absolute",left:`${Math.min(targetPct,100)}%`,top:-1,width:2,height:8,background:SF_NAVY}} title={`Target ${targetPct}%`}/>
                           </div>
                         </div>
                       );
                     })}
+                    <div style={{fontSize:10,color:SF_SUBTLE,marginTop:8,lineHeight:1.4}}>
+                      Actual = each group's share of total planned SF. Vertical line marks the tier target. Within 3 pts = on target.
+                    </div>
                   </div>
                 )}
               </Panel>
@@ -1260,10 +1287,12 @@ export default function App() {
                             <span style={{flex:1}}>Space Type</span>
                             <div style={{display:"flex",gap:14,alignItems:"center",flexShrink:0}}>
                               {rowType==="room"
-                                ? <span style={{width:60,textAlign:"center"}}>Seats/Rm</span>
-                                : <span style={{width:COL.ratio+COL.pct+10,textAlign:"center"}}>Ratio / %</span>
+                                ? <>
+                                    <span style={{width:60,textAlign:"center"}}>Seats/Rm</span>
+                                    <span style={{width:COL.ratio,textAlign:"center"}}>Ratio</span>
+                                  </>
+                                : <span style={{width:COL.share,textAlign:"right"}}>% Share</span>
                               }
-                              <span style={{width:COL.ratio,textAlign:"center"}}>{rowType==="room"?"Ratio":""}</span>
                               <span style={{width:COL.spaces,textAlign:"center"}}>Spaces</span>
                               <span style={{width:COL.seats,textAlign:"center"}}>Seats</span>
                             </div>
