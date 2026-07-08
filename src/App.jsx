@@ -296,7 +296,7 @@ function sLabel(st)  { return st==="good"?"Within target":st==="under"?"Too dens
 // ── UI helpers ───────────────────────────────────────────────────────────────
 function StatCard({label,value,accent,sub}) {
   return (
-    <div style={{background:"#fff",border:`1px solid ${accent}55`,borderRadius:8,padding:"10px 16px",minWidth:100}}>
+    <div style={{background:"#fff",border:`1px solid ${accent}40`,borderRadius:10,padding:"11px 16px",minWidth:100,boxShadow:"0 1px 3px rgba(0,0,0,0.05)",borderTop:`3px solid ${accent}`}}>
       <div style={{fontSize:11,letterSpacing:"0.1em",color:accent,fontWeight:700,marginBottom:4,textTransform:"uppercase"}}>{label}</div>
       <div style={{fontSize:22,fontWeight:700,fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",color:SF_NAVY,lineHeight:1}}>{value}</div>
       {sub && <div style={{fontSize:11,color:SF_SUBTLE,marginTop:4}}>{sub}</div>}
@@ -305,7 +305,7 @@ function StatCard({label,value,accent,sub}) {
 }
 function Panel({title,children}) {
   return (
-    <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:18,boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+    <div style={{background:"#fff",border:"1px solid #E6E4E2",borderRadius:12,padding:18,boxShadow:"0 1px 3px rgba(0,0,30,0.05), 0 4px 12px rgba(0,0,30,0.03)"}}>
       <div style={{fontSize:11,letterSpacing:"0.12em",color:SF_LABEL,fontWeight:700,marginBottom:14,textTransform:"uppercase"}}>{title}</div>
       {children}
     </div>
@@ -901,7 +901,7 @@ export default function App() {
     <div style={{fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",background:"#f3f3f3",minHeight:"100vh"}}>
       <style>{`@media print{.no-print{display:none!important}.print-only{display:block!important}body{background:#fff}}`}</style>
       {/* Header */}
-      <div className="no-print" style={{background:SF_NAVY,position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 12px rgba(0,0,30,0.25)"}}>
+      <div className="no-print" style={{background:`linear-gradient(180deg, #002A7A 0%, ${SF_NAVY} 100%)`,position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 12px rgba(0,0,30,0.22)"}}>
         <div style={{maxWidth:1400,margin:"0 auto",padding:"16px 24px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,minHeight:56}}>
           {/* Logo + title */}
           <div style={{display:"flex",alignItems:"center",gap:12}}>
@@ -927,18 +927,33 @@ export default function App() {
           </div>
           {/* Right actions */}
           <div style={{display:"flex",gap:6,alignItems:"center"}}>
-            <button onClick={()=>setShowScenarios(true)} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 14px",borderRadius:9999,border:"1px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.08)",cursor:"pointer",fontSize:12,fontWeight:600,color:"#fff"}}>
-              📂 Scenarios
+            <button onClick={()=>setShowScenarios(true)}
+              onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.18)"}
+              onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.08)"}
+              style={{display:"flex",alignItems:"center",gap:7,padding:"7px 15px",borderRadius:9999,border:"1px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.08)",cursor:"pointer",fontSize:12.5,fontWeight:600,color:"#fff",transition:"background 0.15s"}}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" stroke="#fff" strokeWidth="1.6" strokeLinejoin="round"/>
+              </svg>
+              Scenarios
             </button>
-            <button onClick={()=>window.print()} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 14px",borderRadius:9999,border:"1px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.08)",cursor:"pointer",fontSize:12,fontWeight:600,color:"#fff"}}>
-              🖨️ Print
+            <button onClick={()=>window.print()}
+              onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.18)"}
+              onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.08)"}
+              style={{display:"flex",alignItems:"center",gap:7,padding:"7px 15px",borderRadius:9999,border:"1px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.08)",cursor:"pointer",fontSize:12.5,fontWeight:600,color:"#fff",transition:"background 0.15s"}}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6v-7Z" stroke="#fff" strokeWidth="1.6" strokeLinejoin="round"/>
+              </svg>
+              Print
             </button>
           </div>
         </div>
         {/* Tab navigation */}
         <div style={{maxWidth:1400,margin:"0 auto",padding:"0 24px",display:"flex",borderTop:"1px solid rgba(255,255,255,0.1)"}}>
           {[["program","Building Program"],["calc","Calculator"],["results","Results"],["comparison","Comparison"],["tiers","Tiers & Regions"],["bu","Business Units"],["db","Space Types"]].map(([id,label])=>(
-            <button key={id} onClick={()=>setTab(id)} style={{background:"none",border:"none",color:tab===id?"#fff":"rgba(255,255,255,0.55)",padding:"10px 16px",cursor:"pointer",fontSize:13,borderBottom:tab===id?`2px solid ${SF_BLUE}`:"2px solid transparent",fontWeight:tab===id?700:400,letterSpacing:tab===id?"0.01em":"normal",transition:"color 0.15s"}}>{label}</button>
+            <button key={id} onClick={()=>setTab(id)}
+              onMouseEnter={e=>{if(tab!==id)e.currentTarget.style.color="rgba(255,255,255,0.85)"}}
+              onMouseLeave={e=>{if(tab!==id)e.currentTarget.style.color="rgba(255,255,255,0.55)"}}
+              style={{background:"none",border:"none",color:tab===id?"#fff":"rgba(255,255,255,0.55)",padding:"11px 17px",cursor:"pointer",fontSize:13,borderBottom:tab===id?`2.5px solid ${SF_BLUE}`:"2.5px solid transparent",fontWeight:tab===id?700:500,letterSpacing:tab===id?"0.01em":"normal",transition:"color 0.15s"}}>{label}</button>
           ))}
         </div>
       </div>
