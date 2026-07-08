@@ -240,10 +240,10 @@ const SPACE_GROUPS = [
     { id:"coat_closet",   label:"Coat Closet",                type:"none", sf:50,  baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"comm_stair",    label:"Communicating Stair",        type:"none", sf:300, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"copy_print",    label:"Copy Print Center",          type:"none", sf:80,  baseRatio:0.15, floorRule:{type:"everyNFloors",n:3}, regionMult:{AMER:1.00,EMEA:0.90,JAPAC:0.85,India:1.20,LATAM:0.90} },
-    { id:"cubbies",       label:"Cubbies",                    type:"none", sf:20,  baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
+    { id:"cubbies",       label:"Cubbies",                    type:"none", sf:20,  baseRatio:0.10, floorRule:{type:"perFloor",perMin:1,perMax:2}, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"idf",           label:"IDF",                        type:"none", sf:100, baseRatio:0.10, floorRule:{type:"perFloor"}, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"irrigation",    label:"Irrigation Room",            type:"none", sf:80,  baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
-    { id:"janitor",       label:"Janitor Closet",             type:"none", sf:50,  baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
+    { id:"janitor",       label:"Janitor Closet",             type:"none", sf:50,  baseRatio:0.10, floorRule:{type:"perFloor",per:1}, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"lobby",         label:"Lobby",                      type:"none", sf:300, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"locker_room",   label:"Locker Room",                type:"none", sf:150, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"mail_center",   label:"Mail Center",                type:"non-capacity", sf:150, baseRatio:0, seatsPerSpace:2, regionMult:{AMER:1.00,EMEA:0.80,JAPAC:0.70,India:0.80,LATAM:0.80} },
@@ -252,7 +252,7 @@ const SPACE_GROUPS = [
     { id:"office_svc",    label:"Office Services Supply Rm",  type:"none", sf:100, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"restroom",      label:"Restroom",                   type:"none", sf:200, baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"staff_room",    label:"Staff Room",                 type:"non-capacity", sf:100, baseRatio:0, seatsPerSpace:6, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
-    { id:"storage_sup",   label:"Storage",                    type:"none", sf:150, baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
+    { id:"storage_sup",   label:"Storage",                    type:"none", sf:150, baseRatio:0.10, floorRule:{type:"perFloor",per:3}, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"team_storage",  label:"Team Storage",               type:"none", sf:7,   baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
   ]},
 ];
@@ -267,13 +267,14 @@ function allSpaces() {
 }
 
 // Count for a space whose quantity is driven by the number of levels/floors:
-//   perFloor      → 1 on every floor
+//   perFloor      → `per` per floor (default 1); ranges (perMin..perMax) use the
+//                   upper bound for the count so SF isn't undersized
 //   everyNFloors  → 1 on every Nth floor (min 1 for the building)
 //   perBuilding   → exactly 1 for the whole building
 function floorRuleCount(rule, floors){
   const f = Math.max(1, floors||1);
   if(!rule) return null;
-  if(rule.type==="perFloor")     return f;
+  if(rule.type==="perFloor")     return f * (rule.perMax ?? rule.per ?? 1);
   if(rule.type==="perBuilding")  return 1;
   if(rule.type==="everyNFloors") return Math.max(1, Math.ceil(f/(rule.n||1)));
   return null;
@@ -282,7 +283,12 @@ function floorRuleCount(rule, floors){
 // Short human descriptor for a floor rule, shown next to floor-driven spaces.
 function floorRuleLabel(rule){
   if(!rule) return "";
-  if(rule.type==="perFloor")     return "1 per floor";
+  if(rule.type==="perFloor"){
+    if(rule.perMin!=null && rule.perMax!=null && rule.perMin!==rule.perMax)
+      return `${rule.perMin}–${rule.perMax} per floor`;
+    const p = rule.per ?? 1;
+    return `${p} per floor`;
+  }
   if(rule.type==="perBuilding")  return "1 per building";
   if(rule.type==="everyNFloors") return `1 every ${rule.n} floors`;
   return "";
@@ -465,7 +471,7 @@ function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,base
   );
 }
 
-function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSeats,fixedExcluded,toggleFixed,capShareDenom,planRef,wsCapDesk}) {
+function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSeats,fixedExcluded,toggleFixed,floorOverride,setFloorOverride,capShareDenom,planRef,wsCapDesk}) {
   const res      = results.find(r=>r.id===sp.id);
   const base     = baseRatios[sp.id] ?? 0;
   const modified = Math.abs((ratios[sp.id]??0) - base) > 0.0005;
@@ -506,10 +512,13 @@ function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSea
         {/* Floor-driven spaces (IDF, Copy Print, MDF) show their level rule + a toggle. */}
         {sp.floorRule ? (
           <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6,width:COL.share}}>
+            {floorOverride[sp.id]!=null &&
+              <button onClick={()=>setFloorOverride(o=>{const n={...o};delete n[sp.id];return n;})}
+                title="Reset to per-level rule" style={{background:"#e8f4fd",border:"none",cursor:"pointer",color:SF_BLUE,fontSize:10,padding:"2px 6px",borderRadius:4,fontWeight:600,flexShrink:0}}>reset</button>}
             <button onClick={()=>toggleFixed(sp.id)} title={floorRuleLabel(sp.floorRule)} style={{
               padding:"3px 8px",borderRadius:6,border:"1px solid #FCC00355",cursor:"pointer",fontSize:10,fontWeight:700,whiteSpace:"nowrap",
-              background:fixedExcluded.has(sp.id)?"#f0f0f0":"#FFF7DE",
-              color:fixedExcluded.has(sp.id)?"#aaa":"#8a6d00"
+              background:fixedExcluded.has(sp.id)?"#f0f0f0":floorOverride[sp.id]!=null?"#EFEFEF":"#FFF7DE",
+              color:fixedExcluded.has(sp.id)?"#aaa":floorOverride[sp.id]!=null?"#999":"#8a6d00"
             }}>
               {floorRuleLabel(sp.floorRule)}
             </button>
@@ -531,8 +540,11 @@ function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSea
             </span>
           </div>
         )}
-        {/* Spaces — editable for ratio-driven rows; read-only for fixed-count / auto Techforce */}
-        {(sp.floorRule || sp.fixedCount || sp.id==="techforce" || sp.id==="techforce_lab")
+        {/* Spaces — floor-rule rows are editable (override the per-level rule); fixed-count / auto Techforce are read-only; everything else edits its ratio. */}
+        {sp.floorRule
+          ? <EditableCount label="Spaces" value={spaces} color={bb} bc={bc}
+              onCommit={c=>setFloorOverride(o=>({...o,[sp.id]:Math.max(0,Math.round(c))}))}/>
+          : (sp.fixedCount || sp.id==="techforce" || sp.id==="techforce_lab")
           ? <ColVal label="Spaces" value={spaces} color={bc} bg={bb} bold/>
           : <EditableCount label="Spaces" value={spaces} color={bb} bc={bc}
               onCommit={c=>{
@@ -581,6 +593,8 @@ export default function App() {
   const [asfOverride,   setAsfOverride]   = useState(null);
   const [fixedExcluded, setFixedExcluded] = useState(new Set(["reflection_room","reception_ws","reception_lounge","wellness_room","webinar_room"]));
   const toggleFixed = (id) => setFixedExcluded(s=>{ const n=new Set(s); n.has(id)?n.delete(id):n.add(id); return n; });
+  // Manual space-count overrides for floor-driven spaces (empty = use the per-level rule).
+  const [floorOverride, setFloorOverride] = useState({});
   const [lockedRooms, setLockedRooms] = useState(true); // all room types locked by default
   const toggleRoomLock = () => setLockedRooms(v => !v);
   const [compData,    setCompData]    = useState(null);  // { id -> {spaces, seats} }
@@ -621,7 +635,7 @@ export default function App() {
   const currentSettings = () => ({
     tiers:TIERS,
     asf,pinnedSeats,inputMode,city,region,tierId,ratios,sfOver,roomSeats,spaceSeats,collapsedGroups,
-    sharedDensityMin,sharedDensityMax,floorSel,selectedFloors,asfOverride,fixedExcluded:[...fixedExcluded],
+    sharedDensityMin,sharedDensityMax,floorSel,selectedFloors,asfOverride,fixedExcluded:[...fixedExcluded],floorOverride,
     bpcSfBase,bpcAsfValue,bpcFloorMode,bpcBuildingRSF,bpcPerFloorRSF,bpcFloors,bpcFloorRSFs,
     bpcOtherSF,bpcAmenitySeats,
   });
@@ -662,6 +676,7 @@ export default function App() {
       if(s.selectedFloors   !== undefined) setSelectedFloors(s.selectedFloors);
       if(s.asfOverride      !== undefined) setAsfOverride(s.asfOverride);
       if(s.fixedExcluded    !== undefined) setFixedExcluded(new Set(s.fixedExcluded));
+      if(s.floorOverride    !== undefined) setFloorOverride(s.floorOverride);
       if(s.bpcSfBase       !== undefined) setBpcSfBase(s.bpcSfBase);
       if(s.bpcAsfValue     !== undefined) setBpcAsfValue(s.bpcAsfValue);
       if(s.bpcFloorMode    !== undefined) setBpcFloorMode(s.bpcFloorMode);
@@ -697,6 +712,7 @@ export default function App() {
     if(s.selectedFloors   !== undefined) setSelectedFloors(s.selectedFloors);
     if(s.asfOverride      !== undefined) setAsfOverride(s.asfOverride);
     if(s.fixedExcluded    !== undefined) setFixedExcluded(new Set(s.fixedExcluded));
+    if(s.floorOverride    !== undefined) setFloorOverride(s.floorOverride);
     if(s.bpcSfBase       !== undefined) setBpcSfBase(s.bpcSfBase);
     if(s.bpcAsfValue     !== undefined) setBpcAsfValue(s.bpcAsfValue);
     if(s.bpcFloorMode    !== undefined) setBpcFloorMode(s.bpcFloorMode);
@@ -782,8 +798,12 @@ export default function App() {
       // Floor-driven spaces (IDF per floor, Copy Print every 3rd floor, MDF per
       // building) derive their count from the level count, not a ratio.
       const frCount = floorRuleCount(sp.floorRule, bpcFloors);
-      let spaces = frCount!=null
-        ? (fixedExcluded.has(sp.id) ? 0 : frCount)
+      // A manual override (if the user typed a count) wins over the per-level rule.
+      const frEffective = frCount!=null
+        ? (floorOverride[sp.id]!=null ? floorOverride[sp.id] : frCount)
+        : null;
+      let spaces = frEffective!=null
+        ? (fixedExcluded.has(sp.id) ? 0 : frEffective)
         : sp.fixedCount ? (fixedExcluded.has(sp.id) ? 0 : sp.fixedCount) : Math.round(planRef*rawR);
       // Seeded training rooms: guarantee at least one so small T1/T2 plans still have M&E.
       if(TRAINING_IDS.includes(sp.id) && rawR>0 && spaces<1) spaces = 1;
@@ -820,7 +840,7 @@ export default function App() {
       const sf = sfOver[sp.id]??sp.sf;
       return {...sp,count:rooms*seatsPer,sf,totalSf:rooms*sf,rooms,seatsPer,effectiveN:effN};
     });
-  },[planRef,ratios,sfOver,roomSeats,spaceSeats,fixedExcluded,bpcFloors]);
+  },[planRef,ratios,sfOver,roomSeats,spaceSeats,fixedExcluded,bpcFloors,floorOverride]);
 
   // Bases needed to back-solve a ratio from a typed Spaces count (editable Spaces field).
   const capBases = useMemo(()=>{
@@ -1352,7 +1372,7 @@ export default function App() {
                           {g.spaces.map(sp=>
                             rowType==="room"
                               ? <RoomRow key={sp.id} sp={sp} results={results} ratios={ratios} setRatios={setRatios} roomSeats={roomSeats} setRoomSeats={setRoomSeats} locked={lockedRooms} baseRatios={baseRatios} totalWsCap={capBases.totalWsCap}/>
-                              : <SpaceRow key={sp.id} sp={sp} results={results} ratios={ratios} baseRatios={baseRatios} setRatios={setRatios} spaceSeats={spaceSeats} setSpaceSeats={setSpaceSeats} fixedExcluded={fixedExcluded} toggleFixed={toggleFixed} capShareDenom={summary.wsCap+summary.openCap} planRef={planRef} wsCapDesk={capBases.wsCapDesk}/>
+                              : <SpaceRow key={sp.id} sp={sp} results={results} ratios={ratios} baseRatios={baseRatios} setRatios={setRatios} spaceSeats={spaceSeats} setSpaceSeats={setSpaceSeats} fixedExcluded={fixedExcluded} toggleFixed={toggleFixed} floorOverride={floorOverride} setFloorOverride={setFloorOverride} capShareDenom={summary.wsCap+summary.openCap} planRef={planRef} wsCapDesk={capBases.wsCapDesk}/>
                           )}
                           </>}
                         </div>
