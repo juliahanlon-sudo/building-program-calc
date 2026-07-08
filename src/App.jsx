@@ -531,6 +531,7 @@ export default function App() {
   const [asf,         setAsf]         = useState(25000);
   const [pinnedSeats, setPinnedSeats] = useState(200);
   const [inputMode,   setInputMode]   = useState("asf");
+  const [estSeats,    setEstSeats]    = useState(200);  // SF Estimator: target cap seats -> ASF needed
   const [city,        setCity]        = useState("");
   const [region,      setRegion]      = useState("AMER");
   const [tierId,      setTierId]      = useState("T1");
@@ -1041,22 +1042,6 @@ export default function App() {
                   <div style={{fontSize:11,color:SF_SUBTLE,marginTop:4}}>Synced with Building Program tab</div>
                 </Field>
 
-                {/* Enter seats instead */}
-                <div style={{marginBottom:12}}>
-                  <div style={{fontSize:12,color:"#666",marginBottom:6}}>Or enter by seats</div>
-                  <div style={{display:"flex",background:"#f0f0f0",borderRadius:8,padding:3,gap:3}}>
-                    {[["asf","Use ASF"],["seats","Enter Seats"]].map(([m,l])=>(
-                      <button key={m} onClick={()=>setInputMode(m)} style={{flex:1,padding:"7px 12px",border:"none",borderRadius:6,cursor:"pointer",fontSize:12,fontWeight:600,color:inputMode===m?SF_NAVY:"#888",background:inputMode===m?"#fff":"transparent",boxShadow:inputMode===m?"0 1px 3px rgba(0,0,0,0.12)":"none"}}>{l}</button>
-                    ))}
-                  </div>
-                </div>
-                {inputMode==="seats" && (
-                  <Field label="Capacity Seats (target)">
-                    <input type="number" value={pinnedSeats} min={1} max={10000} step={1} onChange={e=>setPinnedSeats(parseInt(e.target.value)||0)} style={iStyle}/>
-                    <div style={{fontSize:11,color:SF_SUBTLE,marginTop:5}}>Implied: <strong>{(pinnedSeats*densityMin).toLocaleString()}–{(pinnedSeats*densityMax).toLocaleString()} SF</strong></div>
-                  </Field>
-                )}
-
                 <div style={{background:"#f0f8ff",border:"1px solid #0176D322",borderRadius:8,padding:"10px 12px",marginBottom:8}}>
                   <div style={{fontSize:10,letterSpacing:"0.1em",color:SF_BLUE,textTransform:"uppercase",fontWeight:700,marginBottom:8}}>Workspace SF ({Math.round(wsFrac*100)}% of total)</div>
                   <CalcRow label="Workspace ASF" value={`${workspaceAsf.toLocaleString()} SF`} bold accent={SF_BLUE}/>
@@ -1519,6 +1504,52 @@ export default function App() {
                       <div style={{fontSize:11,color:"#888",marginTop:5}}>{Math.round(bpcAmenitySeats*BPC_AMENITY_CAP_FACTOR)} count toward capacity ({Math.round(BPC_AMENITY_CAP_FACTOR*100)}% factor)</div>
                     </div>
                   </div>
+                </div>
+
+                {/* SF Estimator — reverse calc: target capacity seats -> ASF needed,
+                    using the selected tier's workspace % and the density range. */}
+                <div style={{background:"#fff",border:`1px solid ${SF_GRAY_300}`,borderRadius:8,padding:"20px",boxShadow:"0 1px 3px rgba(0,0,30,0.08)"}}>
+                  <div style={{fontSize:12,fontWeight:800,color:SF_NAVY,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:16,paddingBottom:12,borderBottom:"1px solid #eee"}}>
+                    SF Estimator
+                  </div>
+                  {(()=>{
+                    const seats = estSeats>0 ? estSeats : 0;
+                    const densityMid = (sharedDensityMin+sharedDensityMax)/2;
+                    // Workspace SF = seats × density; total ASF = workspace SF ÷ workspace fraction.
+                    const wsMid  = seats*densityMid;
+                    const asfMin = wsFrac>0 ? Math.round((seats*sharedDensityMin)/wsFrac) : 0;
+                    const asfMax = wsFrac>0 ? Math.round((seats*sharedDensityMax)/wsFrac) : 0;
+                    const asfMid = wsFrac>0 ? Math.round(wsMid/wsFrac) : 0;
+                    return (
+                      <>
+                        <div style={{fontSize:11,color:SF_SUBTLE,marginBottom:14,lineHeight:1.4}}>
+                          Estimate the ASF needed for a target seat count, based on the selected tier
+                          (<strong style={{color:SF_NAVY}}>{tier?.label??"—"}</strong>) and density range.
+                        </div>
+                        <div style={{marginBottom:14}}>
+                          <label style={labelStyle}>Target Capacity Seats</label>
+                          <div style={{display:"flex",border:"1px solid #ddd",borderRadius:8,overflow:"hidden"}}>
+                            <input type="number" min={0} max={20000} step={1} value={estSeats}
+                              onChange={e=>setEstSeats(parseInt(e.target.value)||0)}
+                              style={{flex:1,padding:"9px 12px",border:"none",outline:"none",fontSize:14,fontWeight:600,color:SF_NAVY,background:"transparent",fontVariantNumeric:"tabular-nums"}}/>
+                            <span style={{padding:"0 12px",fontSize:12,color:"#888",borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>seats</span>
+                          </div>
+                        </div>
+                        <div style={{background:"#f0f8ff",border:"1px solid #0176D322",borderRadius:8,padding:"10px 12px",marginBottom:12}}>
+                          <div style={{fontSize:10,letterSpacing:"0.1em",color:SF_BLUE,textTransform:"uppercase",fontWeight:700,marginBottom:8}}>ASF Needed</div>
+                          <CalcRow label={`Workspace SF (${Math.round(wsFrac*100)}%)`} value={`${Math.round(wsMid).toLocaleString()} SF`}/>
+                          <CalcRow label={`At ${sharedDensityMin} SF/seat`} value={`${asfMin.toLocaleString()} SF`}/>
+                          <CalcRow label={`At ${sharedDensityMax} SF/seat`} value={`${asfMax.toLocaleString()} SF`}/>
+                          <CalcRow label="Midpoint ASF" value={`${asfMid.toLocaleString()} SF`} bold accent={SF_BLUE}/>
+                        </div>
+                        <button onClick={()=>{ setBpcSfBase("asf"); setBpcAsfValue(asfMid); setAsfOverride(null); }}
+                          disabled={asfMid<=0}
+                          style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"10px 14px",borderRadius:8,border:"none",background:asfMid>0?SF_BLUE:"#ccc",color:"#fff",cursor:asfMid>0?"pointer":"default",fontSize:12,fontWeight:700,boxShadow:asfMid>0?"0 2px 8px rgba(1,118,211,0.35)":"none"}}>
+                          Apply {asfMid.toLocaleString()} SF as ASF
+                        </button>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 
