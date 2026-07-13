@@ -73,7 +73,7 @@ function BpcPieChart({segments}) {
   let offset = 0;
   if(total<=0) return null;
   return (
-    <div style={{display:"flex",alignItems:"center",gap:24,flexWrap:"wrap"}}>
+    <div style={{display:"flex",alignItems:"flex-start",gap:24,flexWrap:"wrap"}}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{flexShrink:0}}>
         {/* track */}
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#F0F2F5" strokeWidth={stroke}/>
@@ -666,7 +666,7 @@ export default function App() {
 
   // ── Building Program Calculator state ─────────────────────────────────────
   const [bpcSfBase,      setBpcSfBase]      = useState("asf");
-  const [bpcAsfValue,    setBpcAsfValue]    = useState(42500);
+  const [bpcAsfValue,    setBpcAsfValue]    = useState(100000);
   const [bpcFloorMode,   setBpcFloorMode]   = useState("building");
   const [bpcBuildingRSF, setBpcBuildingRSF] = useState(50000);
   const [bpcPerFloorRSF, setBpcPerFloorRSF] = useState(10000);
@@ -952,6 +952,40 @@ export default function App() {
     });
   },[results,tier]);
 
+  // Two SF-based pie charts (per the color-overview reference sheet):
+  //  • Overview   — Workspace vs Amenity (Support folded evenly into both)
+  //  • Detailed   — Workspace split into IW / Open Collab / Conference / Huddle /
+  //                 Phone / Workplace Specialty, plus Amenity and Support slices.
+  const calcPie = useMemo(()=>{
+    const sfOf = pred => results.filter(pred).reduce((a,r)=>a+(r.totalSf??0),0);
+    const wsSF  = sfOf(r=>r.superGroup==="workspace");
+    const amSF  = sfOf(r=>r.superGroup==="amenity");
+    const supSF = sfOf(r=>r.superGroup==="support");
+    const hasAm = amSF>0;
+
+    // Overview: fold Support into the other slices (matches Building Program chart).
+    const overview = [
+      {label:"Workspace", value:wsSF + (hasAm?supSF/2:supSF), color:"#078744"},
+      ...(hasAm?[{label:"Amenity", value:amSF + supSF/2, color:"#ff8000"}]:[]),
+    ];
+
+    // Detailed: subdivide Workspace by Enclosed room families + the other WS groups.
+    const CONF_IDS = ["conf_m","conf_l","conf_xl","conf_aloha"];
+    const HUDDLE_IDS = ["huddle_room","meeting_pod"];
+    const PHONE_IDS = ["micro_phone","focus_pod","phone_room","phone_room_av"];
+    const detailed = [
+      {label:"Individual Work",    value:sfOf(r=>r.groupId==="indiv"),               color:"#078744"},
+      {label:"Collaboration Open", value:sfOf(r=>r.groupId==="open"),                color:"#81C77E"},
+      {label:"Conference Room",    value:sfOf(r=>CONF_IDS.includes(r.id)),           color:"#0729C3"},
+      {label:"Huddle Room",        value:sfOf(r=>HUDDLE_IDS.includes(r.id)),         color:"#0D69FF"},
+      {label:"Phone Room",         value:sfOf(r=>PHONE_IDS.includes(r.id)),          color:"#0AB2FF"},
+      {label:"Workplace Specialty",value:sfOf(r=>r.groupId==="wpspec"),              color:"#FCC003"},
+      {label:"Amenity",            value:amSF,                                        color:"#ff8000"},
+      {label:"Support",            value:supSF,                                       color:"#C1B9B4"},
+    ];
+    return {overview, detailed};
+  },[results]);
+
   // ── Auto-fit ───────────────────────────────────────────────────────────
   // Pin Desks to ~85% of the workspace + open-collaboration capacity seats and
   // scale the OTHER capacity bars (touchdown, library, work room, booths, cafe
@@ -1133,6 +1167,23 @@ export default function App() {
                   </div>
                   {tier&&<div style={{fontSize:11,color:SF_SUBTLE,marginTop:5}}>{tier.description}</div>}
                 </Field>
+                {/* Synced ASF field — shared with Building Program */}
+                <Field label="Assignable SF (ASF)">
+                  <input type="number" min={0} step={500}
+                    value={bpcAsfValue}
+                    onChange={e=>{ setBpcAsfValue(Number(e.target.value)); setAsfOverride(null); }}
+                    style={iStyle}/>
+                  <div style={{fontSize:11,color:SF_SUBTLE,marginTop:4}}>Synced with Building Program tab</div>
+                </Field>
+                <Field label="Levels (Floors)">
+                  <input type="number" min={1} step={1}
+                    value={bpcFloors}
+                    onChange={e=>syncBpcFloors(Math.max(1,Number(e.target.value)||1))}
+                    style={iStyle}/>
+                  <div style={{fontSize:11,color:SF_SUBTLE,marginTop:4}}>
+                    {bpcFloors===1 ? "1 level" : `${bpcFloors} levels`} · ~{Math.round(bpcAsfValue/Math.max(1,bpcFloors)).toLocaleString()} ASF / level
+                  </div>
+                </Field>
                 <div style={{marginBottom:12}}>
                   <div style={{fontSize:12,color:"#666",marginBottom:6}}>Workspace Density Range</div>
                   <div style={{display:"flex",gap:8,alignItems:"center"}}>
@@ -1150,62 +1201,9 @@ export default function App() {
                     {tier&&(sharedDensityMin!==tier.densityMin||sharedDensityMax!==tier.densityMax)&&<button onClick={()=>{setSharedDensityMin(tier.densityMin);setSharedDensityMax(tier.densityMax);}} style={{marginLeft:8,background:"#e8f4fd",border:"none",cursor:"pointer",color:SF_BLUE,fontSize:10,padding:"1px 7px",borderRadius:4,fontWeight:600}}>reset</button>}
                   </div>
                 </div>
-                {tier&&(
-                  <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid #f0f0f0"}}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
-                      <span style={{fontSize:10,letterSpacing:"0.1em",color:SF_LABEL,textTransform:"uppercase"}}>Allocation — Actual vs. Target</span>
-                    </div>
-                    {allocMix.map(m=>{
-                      const sc = m.status==="ok"?GREEN:m.status==="over"?AMBER:RED;
-                      const actualPct = Math.round(m.actual*100);
-                      const targetPct = Math.round(m.target*100);
-                      const diffPts = Math.round(m.diff*100);
-                      return (
-                        <div key={m.id} style={{marginBottom:9}}>
-                          <div style={{display:"flex",alignItems:"center",gap:8,fontSize:11,marginBottom:3}}>
-                            <div style={{width:8,height:8,borderRadius:"50%",background:m.color,flexShrink:0}}/>
-                            <span style={{flex:1,color:"#444",fontWeight:600}}>{m.label}</span>
-                            <span style={{color:sc,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{actualPct}%</span>
-                            <span style={{color:SF_SUBTLE,fontSize:10,width:52,textAlign:"right",flexShrink:0}}>/ {targetPct}% tgt</span>
-                            <span style={{fontSize:12,width:14,textAlign:"center",flexShrink:0}} title={m.status==="ok"?"On target":`${diffPts>0?"+":""}${diffPts} pts vs target`}>
-                              {m.status==="ok"?"✓":"⚠"}
-                            </span>
-                          </div>
-                          {/* actual bar with a target marker line */}
-                          <div style={{position:"relative",height:6,background:"#eee",borderRadius:3,overflow:"hidden",marginLeft:16}}>
-                            <div style={{width:`${Math.min(actualPct,100)}%`,height:"100%",background:sc,borderRadius:3,transition:"width 0.3s"}}/>
-                            <div style={{position:"absolute",left:`${Math.min(targetPct,100)}%`,top:-1,width:2,height:8,background:SF_NAVY}} title={`Target ${targetPct}%`}/>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div style={{fontSize:10,color:SF_SUBTLE,marginTop:8,lineHeight:1.4}}>
-                      Actual = each group's share of total planned SF. Vertical line marks the tier target. Within 3 pts = on target.
-                    </div>
-                  </div>
-                )}
               </Panel>
 
               <Panel title="Floor Selection">
-                {/* Synced ASF field — shared with Building Program */}
-                <Field label="Assignable SF (ASF)">
-                  <input type="number" min={0} step={500}
-                    value={bpcAsfValue}
-                    onChange={e=>{ setBpcAsfValue(Number(e.target.value)); setAsfOverride(null); }}
-                    style={iStyle}/>
-                  <div style={{fontSize:11,color:SF_SUBTLE,marginTop:4}}>Synced with Building Program tab</div>
-                </Field>
-
-                <Field label="Levels (Floors)">
-                  <input type="number" min={1} step={1}
-                    value={bpcFloors}
-                    onChange={e=>syncBpcFloors(Math.max(1,Number(e.target.value)||1))}
-                    style={iStyle}/>
-                  <div style={{fontSize:11,color:SF_SUBTLE,marginTop:4}}>
-                    {bpcFloors===1 ? "1 level" : `${bpcFloors} levels`} · ~{Math.round(bpcAsfValue/Math.max(1,bpcFloors)).toLocaleString()} ASF / level
-                  </div>
-                </Field>
-
                 <div style={{background:"#f0f8ff",border:"1px solid #0176D322",borderRadius:8,padding:"10px 12px",marginBottom:8}}>
                   <div style={{fontSize:10,letterSpacing:"0.1em",color:SF_BLUE,textTransform:"uppercase",fontWeight:700,marginBottom:8}}>Workspace SF ({Math.round(wsFrac*100)}% of total)</div>
                   <CalcRow label="Workspace ASF" value={`${workspaceAsf.toLocaleString()} SF`} bold accent={SF_BLUE}/>
@@ -1220,12 +1218,6 @@ export default function App() {
                     <div style={{fontSize:11,color:"#666"}}>{sLabel(summary.dStatus)} · Target {densityMin}–{densityMax} SF/seat</div>
                   </div>
                 </div>
-                {summary.cap>0 && summary.dStatus!=="ok" && (
-                  <button onClick={handleAutoFit}
-                    style={{marginTop:8,width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"9px 14px",borderRadius:8,border:"none",background:SF_BLUE,color:"#fff",cursor:"pointer",fontSize:12,fontWeight:700,boxShadow:"0 2px 8px rgba(1,118,211,0.35)"}}>
-                    ⇅ Auto-fit
-                  </button>
-                )}
               </Panel>
 
               {/* 1 & 2-person enclosed spaces — accessibility guardrail card */}
@@ -1361,14 +1353,74 @@ export default function App() {
               </div>
 
               {summary.cap>0&&(
-                <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"12px 18px"}}>
-                  <div style={{fontSize:11,color:"#888",marginBottom:6}}>Density gauge (workspace SF) — target {densityMin}–{densityMax} SF/cap seat</div>
-                  <div style={{position:"relative",height:10,background:"#f0f0f0",borderRadius:5}}>
-                    <div style={{position:"absolute",left:`${Math.min((densityMin/200)*100,100)}%`,width:`${Math.min(((densityMax-densityMin)/200)*100,100)}%`,height:"100%",background:`${GREEN}33`,borderRadius:3}}/>
-                    <div style={{position:"absolute",left:`${Math.min((summary.actualDensity/200)*100,99)}%`,top:"-3px",width:3,height:"calc(100% + 6px)",background:dsc,borderRadius:2}}/>
+                <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"12px 18px",display:"flex",alignItems:"center",gap:16}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:11,color:"#888",marginBottom:6}}>Density gauge (workspace SF) — target {densityMin}–{densityMax} SF/cap seat</div>
+                    <div style={{position:"relative",height:10,background:"#f0f0f0",borderRadius:5}}>
+                      <div style={{position:"absolute",left:`${Math.min((densityMin/200)*100,100)}%`,width:`${Math.min(((densityMax-densityMin)/200)*100,100)}%`,height:"100%",background:`${GREEN}33`,borderRadius:3}}/>
+                      <div style={{position:"absolute",left:`${Math.min((summary.actualDensity/200)*100,99)}%`,top:"-3px",width:3,height:"calc(100% + 6px)",background:dsc,borderRadius:2}}/>
+                    </div>
+                    <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:SF_SUBTLE,marginTop:4}}>
+                      <span>0</span><span style={{color:dsc,fontWeight:700}}>{summary.actualDensity} SF/seat</span><span>200</span>
+                    </div>
                   </div>
-                  <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:SF_SUBTLE,marginTop:4}}>
-                    <span>0</span><span style={{color:dsc,fontWeight:700}}>{summary.actualDensity} SF/seat</span><span>200</span>
+                  {summary.dStatus!=="ok" && (
+                    <button onClick={handleAutoFit}
+                      style={{flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"9px 16px",borderRadius:8,border:"none",background:SF_BLUE,color:"#fff",cursor:"pointer",fontSize:12,fontWeight:700,boxShadow:"0 2px 8px rgba(1,118,211,0.35)",whiteSpace:"nowrap"}}>
+                      ⇅ Auto-fit
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {calcPie.overview.some(s=>s.value>0) && (
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+                  <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"18px"}}>
+                    <div style={{fontSize:12,fontWeight:800,color:SF_NAVY,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:2}}>Space Pie Chart — Overview</div>
+                    <div style={{fontSize:11,color:"#888",marginBottom:14}}>Workspace vs. Amenity · by SF</div>
+                    <BpcPieChart segments={calcPie.overview}/>
+                    <div style={{fontSize:10,color:SF_SUBTLE,marginTop:10,fontStyle:"italic",lineHeight:1.4}}>
+                      Note: Support SF is factored evenly into the Workspace and Amenity categories.
+                    </div>
+                    {tier&&(
+                      <div style={{marginTop:14,paddingTop:14,borderTop:"1px solid #f0f0f0"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
+                          <span style={{fontSize:10,letterSpacing:"0.1em",color:SF_LABEL,textTransform:"uppercase"}}>Allocation — Actual vs. Target</span>
+                        </div>
+                        {allocMix.map(m=>{
+                          const sc = m.status==="ok"?GREEN:m.status==="over"?AMBER:RED;
+                          const actualPct = Math.round(m.actual*100);
+                          const targetPct = Math.round(m.target*100);
+                          const diffPts = Math.round(m.diff*100);
+                          return (
+                            <div key={m.id} style={{marginBottom:9}}>
+                              <div style={{display:"flex",alignItems:"center",gap:8,fontSize:11,marginBottom:3}}>
+                                <div style={{width:8,height:8,borderRadius:"50%",background:m.color,flexShrink:0}}/>
+                                <span style={{flex:1,color:"#444",fontWeight:600}}>{m.label}</span>
+                                <span style={{color:sc,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{actualPct}%</span>
+                                <span style={{color:SF_SUBTLE,fontSize:10,width:52,textAlign:"right",flexShrink:0}}>/ {targetPct}% tgt</span>
+                                <span style={{fontSize:12,width:14,textAlign:"center",flexShrink:0}} title={m.status==="ok"?"On target":`${diffPts>0?"+":""}${diffPts} pts vs target`}>
+                                  {m.status==="ok"?"✓":"⚠"}
+                                </span>
+                              </div>
+                              {/* actual bar with a target marker line */}
+                              <div style={{position:"relative",height:6,background:"#eee",borderRadius:3,overflow:"hidden",marginLeft:16}}>
+                                <div style={{width:`${Math.min(actualPct,100)}%`,height:"100%",background:sc,borderRadius:3,transition:"width 0.3s"}}/>
+                                <div style={{position:"absolute",left:`${Math.min(targetPct,100)}%`,top:-1,width:2,height:8,background:SF_NAVY}} title={`Target ${targetPct}%`}/>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <div style={{fontSize:10,color:SF_SUBTLE,marginTop:8,lineHeight:1.4}}>
+                          Actual = each group's share of total planned SF. Vertical line marks the tier target. Within 3 pts = on target.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"18px"}}>
+                    <div style={{fontSize:12,fontWeight:800,color:SF_NAVY,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:2}}>Space Pie Chart — Detailed</div>
+                    <div style={{fontSize:11,color:"#888",marginBottom:14}}>Workspace subgroups + Amenity & Support · by SF</div>
+                    <BpcPieChart segments={calcPie.detailed}/>
                   </div>
                 </div>
               )}
@@ -1723,29 +1775,32 @@ export default function App() {
               {/* RIGHT — Results */}
               <div style={{flex:1,minWidth:300,display:"flex",flexDirection:"column",gap:16}}>
 
-                {/* KPI cards */}
-                <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
-                  {[
-                    ["Capacity Seats", bpcRes.capSeats.toLocaleString(), `${bpcRes.wsCapSeats} workspace + ${bpcRes.amenityCapSeats} amenity`, SF_BLUE],
-                    [bpcSfBase==="asf"?"Assignable SF":"Rentable SF", bpcBaseSF.toLocaleString(), `Total RSF: ${bpcFloorRsfList.reduce((a,b)=>a+b,0).toLocaleString()} SF`, SF_NAVY],
-                  ].map(([label,value,sub,accent])=>(
-                    <div key={label} style={{background:"#fff",border:`1px solid ${SF_GRAY_300}`,borderTop:`3px solid ${accent}`,borderRadius:8,padding:"18px 22px",boxShadow:"0 1px 3px rgba(0,0,30,0.07)",flex:1,minWidth:160}}>
-                      <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",color:"#6B7280",textTransform:"uppercase",marginBottom:6}}>{label}</div>
-                      <div style={{fontSize:30,fontWeight:800,color:SF_NAVY,lineHeight:1,fontVariantNumeric:"tabular-nums"}}>{value}</div>
-                      <div style={{fontSize:12,color:"#6B7280",marginTop:6}}>{sub}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Group breakdown */}
-                <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"22px",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
-                  <div style={{fontSize:12,fontWeight:800,color:SF_NAVY,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:4}}>Space Group Breakdown</div>
-                  <div style={{fontSize:11,color:"#888",marginBottom:16}}>% of {bpcSfBase.toUpperCase()} · total = {bpcBaseSF.toLocaleString()} SF</div>
-                  <BpcPieChart segments={[
-                    {label:"Workspace", value:bpcRes.wsSF,  color:"#078744"},
-                    ...(hasAmenity?[{label:"Amenity", value:bpcRes.amSF, color:"#ff8000"}]:[]),
-                    {label:"Support",   value:bpcRes.supSF, color:"#94A3B8"},
-                  ]}/>
+                {/* Group breakdown pie + KPI cards side by side */}
+                <div style={{display:"flex",gap:16,flexWrap:"wrap",alignItems:"stretch"}}>
+                  {/* Pie chart */}
+                  <div style={{flex:"2 1 340px",minWidth:300,background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"22px",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+                    <div style={{fontSize:12,fontWeight:800,color:SF_NAVY,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:4}}>Space Group Breakdown</div>
+                    <div style={{fontSize:11,color:"#888",marginBottom:16}}>% of {bpcSfBase.toUpperCase()} · total = {bpcBaseSF.toLocaleString()} SF</div>
+                    <BpcPieChart segments={[
+                      // Support SF is folded into the other groups: split evenly between
+                      // Workspace and Amenity, or all into Workspace when there's no amenity.
+                      {label:"Workspace", value:bpcRes.wsSF + (hasAmenity?bpcRes.supSF/2:bpcRes.supSF), color:"#078744"},
+                      ...(hasAmenity?[{label:"Amenity", value:bpcRes.amSF + bpcRes.supSF/2, color:"#ff8000"}]:[]),
+                    ]}/>
+                  </div>
+                  {/* KPI cards — stacked, filling the space beside the pie */}
+                  <div style={{flex:"1 1 200px",minWidth:180,display:"flex",flexDirection:"column",gap:12}}>
+                    {[
+                      ["Capacity Seats", bpcRes.capSeats.toLocaleString(), `${bpcRes.wsCapSeats} workspace + ${bpcRes.amenityCapSeats} amenity`, SF_BLUE],
+                      [bpcSfBase==="asf"?"Assignable SF":"Rentable SF", bpcBaseSF.toLocaleString(), `Total RSF: ${bpcFloorRsfList.reduce((a,b)=>a+b,0).toLocaleString()} SF`, SF_NAVY],
+                    ].map(([label,value,sub,accent])=>(
+                      <div key={label} style={{background:"#fff",border:`1px solid ${SF_GRAY_300}`,borderTop:`3px solid ${accent}`,borderRadius:8,padding:"18px 22px",boxShadow:"0 1px 3px rgba(0,0,30,0.07)",flex:1,display:"flex",flexDirection:"column",justifyContent:"center"}}>
+                        <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",color:"#6B7280",textTransform:"uppercase",marginBottom:6}}>{label}</div>
+                        <div style={{fontSize:30,fontWeight:800,color:SF_NAVY,lineHeight:1,fontVariantNumeric:"tabular-nums"}}>{value}</div>
+                        <div style={{fontSize:12,color:"#6B7280",marginTop:6}}>{sub}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Summary table */}
