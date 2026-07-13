@@ -64,6 +64,56 @@ function BpcGroupBar({label,sf,pct,color,baseSF}) {
   );
 }
 
+// Donut/pie chart for the Space Group Breakdown. `segments` = [{label,value,color}].
+function BpcPieChart({segments}) {
+  const data = segments.filter(s=>s.value>0);
+  const total = data.reduce((a,s)=>a+s.value,0);
+  const size = 200, cx = size/2, cy = size/2, r = 82, stroke = 34;
+  const circ = 2*Math.PI*r;
+  let offset = 0;
+  if(total<=0) return null;
+  return (
+    <div style={{display:"flex",alignItems:"center",gap:24,flexWrap:"wrap"}}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{flexShrink:0}}>
+        {/* track */}
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#F0F2F5" strokeWidth={stroke}/>
+        {/* segments — rotate -90° so the first slice starts at 12 o'clock */}
+        <g transform={`rotate(-90 ${cx} ${cy})`}>
+          {data.map((s,i)=>{
+            const frac = s.value/total;
+            const dash = frac*circ;
+            const el = (
+              <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={s.color} strokeWidth={stroke}
+                strokeDasharray={`${dash} ${circ-dash}`} strokeDashoffset={-offset}
+                style={{transition:"stroke-dasharray 0.4s ease"}}/>
+            );
+            offset += dash;
+            return el;
+          })}
+        </g>
+        {/* center total */}
+        <text x={cx} y={cy-6} textAnchor="middle" style={{fontSize:22,fontWeight:800,fill:SF_NAVY,fontVariantNumeric:"tabular-nums"}}>
+          {Math.round(total).toLocaleString()}
+        </text>
+        <text x={cx} y={cy+14} textAnchor="middle" style={{fontSize:11,fill:"#888",letterSpacing:"0.08em"}}>SF TOTAL</text>
+      </svg>
+      <div style={{display:"flex",flexDirection:"column",gap:12,minWidth:150}}>
+        {data.map((s,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{width:12,height:12,borderRadius:3,background:s.color,flexShrink:0}}/>
+            <div style={{display:"flex",flexDirection:"column",lineHeight:1.25}}>
+              <span style={{fontSize:13,fontWeight:700,color:SF_NAVY}}>{s.label}</span>
+              <span style={{fontSize:11,color:"#6B7280",fontVariantNumeric:"tabular-nums"}}>
+                {Math.round(s.value).toLocaleString()} SF · {Math.round((s.value/total)*100)}%
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const REGIONS = [
   { id:"AMER", label:"AMER" },{ id:"EMEA", label:"EMEA" },{ id:"JAPAC", label:"JAPAC" },
   { id:"India", label:"India" },{ id:"LATAM", label:"LATAM" },
@@ -137,7 +187,7 @@ const SPACE_GROUPS = [
   ]},
   // ── ENCLOSED COLLABORATION ──────────────────────────────────────────────
   { id:"enclosed", label:"Enclosed Collaboration", superGroup:"workspace", color:"#0B5CAB", spaces:[
-    { id:"micro_phone",   label:"Phone Room (Micro)",  type:"non-capacity", sf:25,  isRoomType:true, seatsPerRoom:1,  roomRatio:30,  regionMult:{AMER:1.00,EMEA:0.90,JAPAC:1.10,India:1.20,LATAM:0.80} },
+    { id:"micro_phone",   label:"Phone Room (Micro)",  type:"non-capacity", sf:25,  isRoomType:true, seatsPerRoom:1,  roomRatio:30,  defaultOff:true, regionMult:{AMER:1.00,EMEA:0.90,JAPAC:1.10,India:1.20,LATAM:0.80} },
     { id:"focus_pod",     label:"Focus Pod",            type:"non-capacity", sf:35,  isRoomType:true, seatsPerRoom:1,  roomRatio:30,  regionMult:{AMER:1.00,EMEA:1.10,JAPAC:1.20,India:0.90,LATAM:0.90} },
     { id:"meeting_pod",   label:"Meeting Pod",          type:"non-capacity", sf:50,  isRoomType:true, seatsPerRoom:4,  roomRatio:50,  regionMult:{AMER:1.00,EMEA:1.05,JAPAC:1.00,India:0.80,LATAM:0.90} },
     { id:"phone_room",    label:"Phone Room",           type:"non-capacity", sf:50,  isRoomType:true, seatsPerRoom:1,  roomRatio:15,  regionMult:{AMER:1.00,EMEA:0.95,JAPAC:1.00,India:1.10,LATAM:0.90} },
@@ -146,7 +196,7 @@ const SPACE_GROUPS = [
     { id:"conf_m",        label:"Conference Room (M)",  type:"non-capacity", sf:250, isRoomType:true, seatsPerRoom:8,  roomRatio:50,  regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.10,LATAM:1.00} },
     { id:"conf_l",        label:"Conference Room (L)",  type:"non-capacity", sf:400, isRoomType:true, seatsPerRoom:14, roomRatio:150, regionMult:{AMER:1.00,EMEA:0.95,JAPAC:0.90,India:0.90,LATAM:0.90} },
     { id:"conf_xl",       label:"Conference Room (XL)", type:"non-capacity", sf:600, isRoomType:true, seatsPerRoom:20, roomRatio:500, regionMult:{AMER:1.00,EMEA:0.90,JAPAC:0.85,India:0.80,LATAM:0.85} },
-    { id:"conf_aloha",    label:"Conference Room (Aloha)", type:"non-capacity", sf:400, isRoomType:true, seatsPerRoom:14, roomRatio:150, regionMult:{AMER:1.00,EMEA:0.95,JAPAC:0.90,India:0.90,LATAM:0.90} },
+    { id:"conf_aloha",    label:"Conference Room (Aloha)", type:"non-capacity", sf:400, isRoomType:true, seatsPerRoom:14, roomRatio:150, defaultOff:true, regionMult:{AMER:1.00,EMEA:0.95,JAPAC:0.90,India:0.90,LATAM:0.90} },
   ]},
   // ── WORKPLACE SPECIALTY ─────────────────────────────────────────────────
   { id:"wpspec", label:"Workplace Specialty", superGroup:"workspace", color:"#FCC003", spaces:[
@@ -414,7 +464,7 @@ function EditableCount({label,value,color,bc,onCommit}) {
   );
 }
 
-function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,baseRatios,totalWsCap}) {
+function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,baseRatios,totalWsCap,roomDisabled,toggleRoomDisabled}) {
   const res     = results.find(r=>r.id===sp.id);
   const rooms   = res?.rooms ?? 0;
   const seatsPer= roomSeats[sp.id] ?? sp.seatsPerRoom ?? 1;
@@ -422,6 +472,7 @@ function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,base
   const seats   = rooms * seatsPer;
   const defaultN = baseRatios?.[sp.id] ?? sp.roomRatio;
   const modified = ratios[sp.id] !== undefined && ratios[sp.id] !== defaultN;
+  const disabled = roomDisabled?.has(sp.id);
   return (
     <div style={{display:"flex",alignItems:"center",padding:"8px 20px",gap:12,borderBottom:"1px solid #f5f5f5",background:locked?"transparent":"#fffdf0"}}>
       {/* Label */}
@@ -441,8 +492,15 @@ function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,base
         {/* Ratio */}
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,width:COL.ratio}}>
           <span style={{fontSize:9,color:SF_LABEL,textTransform:"uppercase",letterSpacing:"0.08em"}}>Ratio</span>
-          {locked ? (
-            <span style={{fontSize:14,fontWeight:700,color:"#0B5CAB",background:"#0B5CAB0D",border:"1px solid #0B5CAB33",borderRadius:6,padding:"3px 10px",fontVariantNumeric:"tabular-nums",whiteSpace:"nowrap"}}>
+          {disabled ? (
+            // Off by default (e.g. Phone Room Micro, Aloha) — ratio shows greyed; click to activate.
+            <span onClick={()=>toggleRoomDisabled(sp.id)} title="Click to activate this space"
+              style={{fontSize:14,fontWeight:700,color:"#bbb",background:"#f4f4f4",border:"1px dashed #d0d0d0",borderRadius:6,padding:"3px 10px",fontVariantNumeric:"tabular-nums",whiteSpace:"nowrap",cursor:"pointer"}}>
+              1 : {effN}
+            </span>
+          ) : locked ? (
+            <span onClick={()=>toggleRoomDisabled?.(sp.id)} title={sp.defaultOff?"Click to turn off this space":undefined}
+              style={{fontSize:14,fontWeight:700,color:"#0B5CAB",background:"#0B5CAB0D",border:"1px solid #0B5CAB33",borderRadius:6,padding:"3px 10px",fontVariantNumeric:"tabular-nums",whiteSpace:"nowrap",cursor:sp.defaultOff?"pointer":"default"}}>
               1 : {effN}
             </span>
           ) : (
@@ -453,6 +511,8 @@ function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,base
                 style={{width:52,padding:"3px 6px",border:`1.5px solid ${modified?"#e6a817":"#0B5CAB44"}`,borderRadius:6,fontSize:13,fontWeight:700,color:modified?"#b45309":"#0B5CAB",textAlign:"center"}}/>
               {modified && <button onClick={()=>setRatios(r=>({...r,[sp.id]:defaultN}))}
                 style={{background:"#fef9e7",border:"none",cursor:"pointer",color:"#b45309",fontSize:10,padding:"2px 6px",borderRadius:4,fontWeight:600}}>reset</button>}
+              {sp.defaultOff && <button onClick={()=>toggleRoomDisabled(sp.id)} title="Turn off this space"
+                style={{background:"#f4f4f4",border:"none",cursor:"pointer",color:"#999",fontSize:10,padding:"2px 6px",borderRadius:4,fontWeight:600}}>off</button>}
             </div>
           )}
         </div>
@@ -595,6 +655,10 @@ export default function App() {
   const toggleFixed = (id) => setFixedExcluded(s=>{ const n=new Set(s); n.has(id)?n.delete(id):n.add(id); return n; });
   // Manual space-count overrides for floor-driven spaces (empty = use the per-level rule).
   const [floorOverride, setFloorOverride] = useState({});
+  // Room types that are off by default (e.g. Phone Room Micro, Aloha) — ratio shows
+  // greyed; clicking it activates the space. Seed from each space's defaultOff flag.
+  const [roomDisabled, setRoomDisabled] = useState(()=>new Set(allSpaces().filter(s=>s.defaultOff).map(s=>s.id)));
+  const toggleRoomDisabled = (id) => setRoomDisabled(s=>{ const n=new Set(s); n.has(id)?n.delete(id):n.add(id); return n; });
   const [lockedRooms, setLockedRooms] = useState(true); // all room types locked by default
   const toggleRoomLock = () => setLockedRooms(v => !v);
   const [compData,    setCompData]    = useState(null);  // { id -> {spaces, seats} }
@@ -635,7 +699,7 @@ export default function App() {
   const currentSettings = () => ({
     tiers:TIERS,
     asf,pinnedSeats,inputMode,city,region,tierId,ratios,sfOver,roomSeats,spaceSeats,collapsedGroups,
-    sharedDensityMin,sharedDensityMax,floorSel,selectedFloors,asfOverride,fixedExcluded:[...fixedExcluded],floorOverride,
+    sharedDensityMin,sharedDensityMax,floorSel,selectedFloors,asfOverride,fixedExcluded:[...fixedExcluded],floorOverride,roomDisabled:[...roomDisabled],
     bpcSfBase,bpcAsfValue,bpcFloorMode,bpcBuildingRSF,bpcPerFloorRSF,bpcFloors,bpcFloorRSFs,
     bpcOtherSF,bpcAmenitySeats,
   });
@@ -677,6 +741,7 @@ export default function App() {
       if(s.asfOverride      !== undefined) setAsfOverride(s.asfOverride);
       if(s.fixedExcluded    !== undefined) setFixedExcluded(new Set(s.fixedExcluded));
       if(s.floorOverride    !== undefined) setFloorOverride(s.floorOverride);
+      if(s.roomDisabled     !== undefined) setRoomDisabled(new Set(s.roomDisabled));
       if(s.bpcSfBase       !== undefined) setBpcSfBase(s.bpcSfBase);
       if(s.bpcAsfValue     !== undefined) setBpcAsfValue(s.bpcAsfValue);
       if(s.bpcFloorMode    !== undefined) setBpcFloorMode(s.bpcFloorMode);
@@ -713,6 +778,7 @@ export default function App() {
     if(s.asfOverride      !== undefined) setAsfOverride(s.asfOverride);
     if(s.fixedExcluded    !== undefined) setFixedExcluded(new Set(s.fixedExcluded));
     if(s.floorOverride    !== undefined) setFloorOverride(s.floorOverride);
+    if(s.roomDisabled     !== undefined) setRoomDisabled(new Set(s.roomDisabled));
     if(s.bpcSfBase       !== undefined) setBpcSfBase(s.bpcSfBase);
     if(s.bpcAsfValue     !== undefined) setBpcAsfValue(s.bpcAsfValue);
     if(s.bpcFloorMode    !== undefined) setBpcFloorMode(s.bpcFloorMode);
@@ -835,12 +901,12 @@ export default function App() {
       }
       if (!sp.isRoomType) return sp;
       const effN = ratios[sp.id]??sp.roomRatio;
-      const rooms = effN>0 ? Math.round(totalWsCap/effN) : 0;
+      const rooms = (effN>0 && !roomDisabled.has(sp.id)) ? Math.round(totalWsCap/effN) : 0;
       const seatsPer = roomSeats[sp.id]??sp.seatsPerRoom??1;
       const sf = sfOver[sp.id]??sp.sf;
       return {...sp,count:rooms*seatsPer,sf,totalSf:rooms*sf,rooms,seatsPer,effectiveN:effN};
     });
-  },[planRef,ratios,sfOver,roomSeats,spaceSeats,fixedExcluded,bpcFloors,floorOverride]);
+  },[planRef,ratios,sfOver,roomSeats,spaceSeats,fixedExcluded,bpcFloors,floorOverride,roomDisabled]);
 
   // Bases needed to back-solve a ratio from a typed Spaces count (editable Spaces field).
   const capBases = useMemo(()=>{
@@ -1371,7 +1437,7 @@ export default function App() {
                           </div>
                           {g.spaces.map(sp=>
                             rowType==="room"
-                              ? <RoomRow key={sp.id} sp={sp} results={results} ratios={ratios} setRatios={setRatios} roomSeats={roomSeats} setRoomSeats={setRoomSeats} locked={lockedRooms} baseRatios={baseRatios} totalWsCap={capBases.totalWsCap}/>
+                              ? <RoomRow key={sp.id} sp={sp} results={results} ratios={ratios} setRatios={setRatios} roomSeats={roomSeats} setRoomSeats={setRoomSeats} locked={lockedRooms} baseRatios={baseRatios} totalWsCap={capBases.totalWsCap} roomDisabled={roomDisabled} toggleRoomDisabled={toggleRoomDisabled}/>
                               : <SpaceRow key={sp.id} sp={sp} results={results} ratios={ratios} baseRatios={baseRatios} setRatios={setRatios} spaceSeats={spaceSeats} setSpaceSeats={setSpaceSeats} fixedExcluded={fixedExcluded} toggleFixed={toggleFixed} floorOverride={floorOverride} setFloorOverride={setFloorOverride} capShareDenom={summary.wsCap+summary.openCap} planRef={planRef} wsCapDesk={capBases.wsCapDesk}/>
                           )}
                           </>}
@@ -1675,13 +1741,11 @@ export default function App() {
                 <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"22px",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
                   <div style={{fontSize:12,fontWeight:800,color:SF_NAVY,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:4}}>Space Group Breakdown</div>
                   <div style={{fontSize:11,color:"#888",marginBottom:16}}>% of {bpcSfBase.toUpperCase()} · total = {bpcBaseSF.toLocaleString()} SF</div>
-                  <BpcGroupBar label="Workspace" sf={bpcRes.wsSF}  pct={bpcTierAlloc.workspace} color="#078744"  baseSF={bpcBaseSF}/>
-                  {hasAmenity && <BpcGroupBar label="Amenity" sf={bpcRes.amSF} pct={bpcTierAlloc.amenity} color="#ff8000" baseSF={bpcBaseSF}/>}
-                  <BpcGroupBar label="Support"   sf={bpcRes.supSF} pct={bpcTierAlloc.support}   color="#94A3B8"  baseSF={bpcBaseSF}/>
-                  <div style={{borderTop:"1px solid #eee",marginTop:8,paddingTop:8,display:"flex",justifyContent:"space-between",fontSize:12,fontWeight:700,color:SF_NAVY}}>
-                    <span>Total</span>
-                    <span>{(bpcRes.wsSF+bpcRes.amSF+bpcRes.supSF).toLocaleString()} SF</span>
-                  </div>
+                  <BpcPieChart segments={[
+                    {label:"Workspace", value:bpcRes.wsSF,  color:"#078744"},
+                    ...(hasAmenity?[{label:"Amenity", value:bpcRes.amSF, color:"#ff8000"}]:[]),
+                    {label:"Support",   value:bpcRes.supSF, color:"#94A3B8"},
+                  ]}/>
                 </div>
 
                 {/* Summary table */}
