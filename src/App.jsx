@@ -287,7 +287,6 @@ const SPACE_GROUPS = [
     { id:"ai_learning",         label:"AI - Learning",                    type:"non-capacity", sf:200, baseRatio:0, seatsPerSpace:8, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"barista_bar",         label:"Barista Bar",                      type:"non-capacity", sf:150, baseRatio:0, seatsPerSpace:4, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"cafeteria",           label:"Cafeteria",                        type:"non-capacity", sf:800, baseRatio:0, seatsPerSpace:60, regionMult:{AMER:1.00,EMEA:1.10,JAPAC:1.10,India:1.20,LATAM:1.10} },
-    { id:"trailblazer_hub",     label:"Community Trailblazer Hub",        type:"non-capacity", sf:400, baseRatio:0, seatsPerSpace:20, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"customer_conf",       label:"Customer - Conference Room",       type:"capacity", sf:250, baseRatio:0, seatsPerSpace:22, seatWeight:0.75, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"customer_huddle",     label:"Customer - Huddle Room",           type:"non-capacity", sf:120, baseRatio:0, seatsPerSpace:5, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"customer_phone",      label:"Customer - Phone Room",            type:"non-capacity", sf:50,  baseRatio:0, seatsPerSpace:1, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
@@ -366,6 +365,21 @@ function floorRuleLabel(rule){
   if(rule.type==="perBuilding")  return "1 per building";
   if(rule.type==="everyNFloors") return `1 every ${rule.n} floors`;
   return "";
+}
+
+// Country-specific default quantities. Keyed by country name (matches the
+// GeoNames country strings stored from the city typeahead), then space id ->
+// floorRule. These override a space's default rule/ratio when that country is
+// selected; the user can still override the resulting count per space.
+const COUNTRY_SPACE_RULES = {
+  "Israel": { bomb_shelter: {type:"perFloor", per:2} },  // 2 bomb shelters per floor
+  "India":  { cafeteria:    {type:"perBuilding"} },       // 1 cafeteria per location
+};
+
+// Resolve the floor rule in effect for a space given the selected country:
+// a country-specific rule wins over the space's own default floorRule.
+function effectiveFloorRule(sp, country){
+  return COUNTRY_SPACE_RULES[country]?.[sp.id] ?? sp.floorRule ?? null;
 }
 
 function computeRatios(tierId, regionId, tiers=DEFAULT_TIERS) {
@@ -555,8 +569,12 @@ function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,base
   );
 }
 
-function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSeats,fixedExcluded,toggleFixed,floorOverride,setFloorOverride,capShareDenom,planRef,wsCapDesk}) {
+function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSeats,fixedExcluded,toggleFixed,floorOverride,setFloorOverride,capShareDenom,planRef,wsCapDesk,country}) {
   const res      = results.find(r=>r.id===sp.id);
+  // Effective floor rule (a country-specific default can add one, e.g. Israel
+  // bomb shelters / India cafeteria) — controls whether this row shows the
+  // floor-rule pill + editable count instead of a ratio.
+  const floorRule = effectiveFloorRule(sp, country);
   const base     = baseRatios[sp.id] ?? 0;
   const modified = Math.abs((ratios[sp.id]??0) - base) > 0.0005;
   const bc  = sp.type==="capacity"?"#70BF75":sp.type==="non-capacity"?"#7B68EE":"#90A4AE";
@@ -594,17 +612,17 @@ function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSea
       {/* Controls */}
       <div style={{display:"flex",alignItems:"center",gap:14,flexShrink:0}}>
         {/* Floor-driven spaces (IDF, Copy Print, MDF) show their level rule + a toggle. */}
-        {sp.floorRule ? (
+        {floorRule ? (
           <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6,width:COL.share}}>
             {floorOverride[sp.id]!=null &&
               <button onClick={()=>setFloorOverride(o=>{const n={...o};delete n[sp.id];return n;})}
                 title="Reset to per-level rule" style={{background:"#e8f4fd",border:"none",cursor:"pointer",color:SF_BLUE,fontSize:10,padding:"2px 6px",borderRadius:4,fontWeight:600,flexShrink:0}}>reset</button>}
-            <button onClick={()=>toggleFixed(sp.id)} title={floorRuleLabel(sp.floorRule)} style={{
+            <button onClick={()=>toggleFixed(sp.id)} title={floorRuleLabel(floorRule)} style={{
               padding:"3px 8px",borderRadius:6,border:"1px solid #FCC00355",cursor:"pointer",fontSize:10,fontWeight:700,whiteSpace:"nowrap",
               background:fixedExcluded.has(sp.id)?"#f0f0f0":floorOverride[sp.id]!=null?"#EFEFEF":"#FFF7DE",
               color:fixedExcluded.has(sp.id)?"#aaa":floorOverride[sp.id]!=null?"#999":"#8a6d00"
             }}>
-              {floorRuleLabel(sp.floorRule)}
+              {floorRuleLabel(floorRule)}
             </button>
           </div>
         ) : sp.fixedCount ? (
@@ -625,7 +643,7 @@ function SpaceRow({sp,results,ratios,baseRatios,setRatios,spaceSeats,setSpaceSea
           </div>
         )}
         {/* Spaces — floor-rule rows are editable (override the per-level rule); fixed-count / auto Techforce are read-only; everything else edits its ratio. */}
-        {sp.floorRule
+        {floorRule
           ? <EditableCount label="Spaces" value={spaces} color={bb} bc={bc}
               onCommit={c=>setFloorOverride(o=>({...o,[sp.id]:Math.max(0,Math.round(c))}))}/>
           : (sp.fixedCount || sp.id==="techforce" || sp.id==="techforce_lab")
@@ -904,7 +922,8 @@ export default function App() {
       const rawR = ratios[sp.id]??0;
       // Floor-driven spaces (IDF per floor, Copy Print every 3rd floor, MDF per
       // building) derive their count from the level count, not a ratio.
-      const frCount = floorRuleCount(sp.floorRule, bpcFloors);
+      const effRule = effectiveFloorRule(sp, country);
+      const frCount = floorRuleCount(effRule, bpcFloors);
       // A manual override (if the user typed a count) wins over the per-level rule.
       const frEffective = frCount!=null
         ? (floorOverride[sp.id]!=null ? floorOverride[sp.id] : frCount)
@@ -947,7 +966,7 @@ export default function App() {
       const sf = sfOver[sp.id]??sp.sf;
       return {...sp,count:rooms*seatsPer,sf,totalSf:rooms*sf,rooms,seatsPer,effectiveN:effN};
     });
-  },[planRef,ratios,sfOver,roomSeats,spaceSeats,fixedExcluded,bpcFloors,floorOverride,roomDisabled]);
+  },[planRef,ratios,sfOver,roomSeats,spaceSeats,fixedExcluded,bpcFloors,floorOverride,roomDisabled,country]);
 
   // Bases needed to back-solve a ratio from a typed Spaces count (editable Spaces field).
   const capBases = useMemo(()=>{
@@ -1555,7 +1574,7 @@ export default function App() {
                           {g.spaces.map(sp=>
                             rowType==="room"
                               ? <RoomRow key={sp.id} sp={sp} results={results} ratios={ratios} setRatios={setRatios} roomSeats={roomSeats} setRoomSeats={setRoomSeats} locked={lockedRooms} baseRatios={baseRatios} totalWsCap={capBases.totalWsCap} roomDisabled={roomDisabled} toggleRoomDisabled={toggleRoomDisabled}/>
-                              : <SpaceRow key={sp.id} sp={sp} results={results} ratios={ratios} baseRatios={baseRatios} setRatios={setRatios} spaceSeats={spaceSeats} setSpaceSeats={setSpaceSeats} fixedExcluded={fixedExcluded} toggleFixed={toggleFixed} floorOverride={floorOverride} setFloorOverride={setFloorOverride} capShareDenom={summary.wsCap+summary.openCap} planRef={planRef} wsCapDesk={capBases.wsCapDesk}/>
+                              : <SpaceRow key={sp.id} sp={sp} results={results} ratios={ratios} baseRatios={baseRatios} setRatios={setRatios} spaceSeats={spaceSeats} setSpaceSeats={setSpaceSeats} fixedExcluded={fixedExcluded} toggleFixed={toggleFixed} floorOverride={floorOverride} setFloorOverride={setFloorOverride} capShareDenom={summary.wsCap+summary.openCap} planRef={planRef} wsCapDesk={capBases.wsCapDesk} country={country}/>
                           )}
                           </>}
                         </div>
