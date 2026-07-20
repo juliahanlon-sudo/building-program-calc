@@ -1,5 +1,30 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import ScenarioManager from "./ScenarioManager.jsx";
+import { CITIES_RAW } from "./citiesData.js";
+
+// Parse the embedded GeoNames list once into {label, city, state, country}.
+// Rows are tab-delimited "city\tstate\tcountry", sorted by population desc.
+const CITIES = CITIES_RAW.split("\n").map(line => {
+  const [city, state, country] = line.split("\t");
+  const label = country === "United States"
+    ? (state ? `${city}, ${state}, USA` : `${city}, USA`)
+    : `${city}, ${country}`;
+  return { label, city, state: state || "", country: country || "", lc: (city + " " + (state||"") + " " + (country||"")).toLowerCase() };
+});
+
+// Return up to `limit` cities matching the query. Prefers cities whose name
+// starts with the query, then any containing it; input is already population-ranked.
+function searchCities(query, limit = 8) {
+  const q = query.trim().toLowerCase();
+  if (q.length < 2) return [];
+  const starts = [], contains = [];
+  for (const c of CITIES) {
+    if (c.city.toLowerCase().startsWith(q)) starts.push(c);
+    else if (c.lc.includes(q)) contains.push(c);
+    if (starts.length >= limit) break;
+  }
+  return [...starts, ...contains].slice(0, limit);
+}
 
 // ── Salesforce Digital Palette ────────────────────────────────────────────────
 const SF_NAVY       = "#001E5B";   // Electric Blue 15 — header bg
@@ -286,7 +311,6 @@ const SPACE_GROUPS = [
     { id:"av_storage",    label:"AV Storage",                 type:"none", sf:200, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"bike_room",     label:"Bike Room",                  type:"none", sf:80,  baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"bomb_shelter",  label:"Bomb Shelter",               type:"none", sf:200, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
-    { id:"built_out",     label:"Built Out Zone",             type:"none", sf:200, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"coat_closet",   label:"Coat Closet",                type:"none", sf:50,  baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"comm_stair",    label:"Communicating Stair",        type:"none", sf:300, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"copy_print",    label:"Copy Print Center",          type:"none", sf:80,  baseRatio:0.15, floorRule:{type:"everyNFloors",n:3}, regionMult:{AMER:1.00,EMEA:0.90,JAPAC:0.85,India:1.20,LATAM:0.90} },
@@ -631,7 +655,20 @@ export default function App() {
   const [pinnedSeats, setPinnedSeats] = useState(200);
   const [inputMode,   setInputMode]   = useState("asf");
   const [estSeats,    setEstSeats]    = useState(200);  // SF Estimator: target cap seats -> ASF needed
+  const [projectName, setProjectName] = useState("");
   const [city,        setCity]        = useState("");
+  const [country,     setCountry]     = useState("");
+  const [cityQuery,   setCityQuery]   = useState("");  // text in the typeahead box
+  const [cityOpen,    setCityOpen]    = useState(false);
+  const cityBoxRef = useRef(null);
+  const cityMatches = useMemo(()=>searchCities(cityQuery), [cityQuery]);
+  // Close the suggestion dropdown on any outside click.
+  useEffect(()=>{
+    if(!cityOpen) return;
+    const onDown = (e)=>{ if(cityBoxRef.current && !cityBoxRef.current.contains(e.target)) setCityOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    return ()=>document.removeEventListener("mousedown", onDown);
+  },[cityOpen]);
   const [region,      setRegion]      = useState("AMER");
   const [tierId,      setTierId]      = useState("T1");
   // Editable tier definitions (allocations + density) — seeded from the defaults.
@@ -698,14 +735,14 @@ export default function App() {
 
   const currentSettings = () => ({
     tiers:TIERS,
-    asf,pinnedSeats,inputMode,city,region,tierId,ratios,sfOver,roomSeats,spaceSeats,collapsedGroups,
+    asf,pinnedSeats,inputMode,projectName,city,country,region,tierId,ratios,sfOver,roomSeats,spaceSeats,collapsedGroups,
     sharedDensityMin,sharedDensityMax,floorSel,selectedFloors,asfOverride,fixedExcluded:[...fixedExcluded],floorOverride,roomDisabled:[...roomDisabled],
     bpcSfBase,bpcAsfValue,bpcFloorMode,bpcBuildingRSF,bpcPerFloorRSF,bpcFloors,bpcFloorRSFs,
     bpcOtherSF,bpcAmenitySeats,
   });
 
   const handleSave = () => {
-    const name = saveName.trim() || city.trim() || "Untitled";
+    const name = saveName.trim() || projectName.trim() || city.trim() || "Untitled";
     const key  = `spaceplan:${name}`;
     try {
       localStorage.setItem(key, JSON.stringify({...currentSettings(), savedAt: new Date().toLocaleString()}));
@@ -726,7 +763,9 @@ export default function App() {
       if(s.asf         !== undefined) setAsf(s.asf);
       if(s.pinnedSeats !== undefined) setPinnedSeats(s.pinnedSeats);
       if(s.inputMode   !== undefined) setInputMode(s.inputMode);
-      if(s.city        !== undefined) setCity(s.city);
+      if(s.projectName !== undefined) setProjectName(s.projectName);
+      if(s.city        !== undefined){ setCity(s.city); setCityQuery(s.city); }
+      if(s.country     !== undefined) setCountry(s.country);
       if(s.region      !== undefined) setRegion(s.region);
       if(s.tierId      !== undefined) setTierId(s.tierId);
       if(s.ratios      !== undefined) setRatios(s.ratios);
@@ -763,7 +802,9 @@ export default function App() {
     if(s.asf         !== undefined) setAsf(s.asf);
     if(s.pinnedSeats !== undefined) setPinnedSeats(s.pinnedSeats);
     if(s.inputMode   !== undefined) setInputMode(s.inputMode);
-    if(s.city        !== undefined) setCity(s.city);
+    if(s.projectName !== undefined) setProjectName(s.projectName);
+    if(s.city        !== undefined){ setCity(s.city); setCityQuery(s.city); }
+    if(s.country     !== undefined) setCountry(s.country);
     if(s.region      !== undefined) setRegion(s.region);
     if(s.tierId      !== undefined) setTierId(s.tierId);
     if(s.ratios      !== undefined) setRatios(s.ratios);
@@ -1153,7 +1194,31 @@ export default function App() {
           <div style={{display:"grid",gridTemplateColumns:"275px minmax(0,900px)",gap:16,alignItems:"start",justifyContent:"center"}}>
             <div style={{display:"flex",flexDirection:"column",gap:12}}>
               <Panel title="Configuration">
-                <Field label="City / Location"><input type="text" value={city} placeholder="e.g. San Francisco, CA" onChange={e=>setCity(e.target.value)} style={{...iStyle,fontWeight:400}}/></Field>
+                <Field label="Project Name"><input type="text" value={projectName} placeholder="e.g. Tower 3 Refresh" onChange={e=>setProjectName(e.target.value)} style={{...iStyle,fontWeight:400}}/></Field>
+                <Field label="City / Location">
+                  <div ref={cityBoxRef} style={{position:"relative"}}>
+                    <input type="text" value={cityQuery} placeholder="Type a city…"
+                      onChange={e=>{ setCityQuery(e.target.value); setCityOpen(true); if(e.target.value.trim()==="") { setCity(""); setCountry(""); } }}
+                      onFocus={()=>{ if(cityMatches.length) setCityOpen(true); }}
+                      autoComplete="off"
+                      style={{...iStyle,fontWeight:400}}/>
+                    {cityOpen && cityMatches.length>0 && (
+                      <div style={{position:"absolute",top:"calc(100% + 2px)",left:0,right:0,zIndex:40,background:"#fff",border:`1px solid ${SF_GRAY_300}`,borderRadius:6,boxShadow:"0 6px 18px rgba(0,0,30,0.14)",maxHeight:260,overflowY:"auto"}}>
+                        {cityMatches.map((c,i)=>(
+                          <div key={c.label+i}
+                            onClick={()=>{ setCity(c.city); setCountry(c.country); setCityQuery(c.label); setCityOpen(false); }}
+                            style={{padding:"8px 12px",fontSize:13,color:SF_NAVY,cursor:"pointer",borderBottom:i<cityMatches.length-1?"1px solid #f0f0f0":"none"}}
+                            onMouseDown={e=>e.preventDefault()}
+                            onMouseEnter={e=>e.currentTarget.style.background="#f2f7ff"}
+                            onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
+                            {c.label}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {country && <div style={{fontSize:11,color:SF_SUBTLE,marginTop:4}}>Country: <strong style={{color:SF_NAVY}}>{country}</strong></div>}
+                </Field>
                 <Field label="Region">
                   <div style={{position:"relative"}}>
                     <select value={region} onChange={e=>changeRegion(e.target.value)} style={selStyle}>{REGIONS.map(r=><option key={r.id} value={r.id}>{r.label}</option>)}</select>
@@ -1593,6 +1658,39 @@ export default function App() {
                 <div style={{background:"#fff",border:`1px solid ${SF_GRAY_300}`,borderRadius:8,padding:"20px",boxShadow:"0 1px 3px rgba(0,0,30,0.08)"}}>
                   <div style={{fontSize:12,fontWeight:800,color:SF_NAVY,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:16,paddingBottom:12,borderBottom:"1px solid #eee"}}>
                     Configuration
+                  </div>
+
+                  {/* Project Name — shared with Calculator tab */}
+                  <div style={{marginBottom:16}}>
+                    <label style={labelStyle}>Project Name</label>
+                    <input type="text" value={projectName} placeholder="e.g. Tower 3 Refresh" onChange={e=>setProjectName(e.target.value)} style={{...iStyle2,fontWeight:400}}/>
+                  </div>
+
+                  {/* City / Location typeahead — shared with Calculator tab */}
+                  <div style={{marginBottom:16}}>
+                    <label style={labelStyle}>City / Location</label>
+                    <div ref={cityBoxRef} style={{position:"relative"}}>
+                      <input type="text" value={cityQuery} placeholder="Type a city…"
+                        onChange={e=>{ setCityQuery(e.target.value); setCityOpen(true); if(e.target.value.trim()==="") { setCity(""); setCountry(""); } }}
+                        onFocus={()=>{ if(cityMatches.length) setCityOpen(true); }}
+                        autoComplete="off"
+                        style={{...iStyle2,fontWeight:400}}/>
+                      {cityOpen && cityMatches.length>0 && (
+                        <div style={{position:"absolute",top:"calc(100% + 2px)",left:0,right:0,zIndex:40,background:"#fff",border:`1px solid ${SF_GRAY_300}`,borderRadius:6,boxShadow:"0 6px 18px rgba(0,0,30,0.14)",maxHeight:260,overflowY:"auto"}}>
+                          {cityMatches.map((c,i)=>(
+                            <div key={c.label+i}
+                              onClick={()=>{ setCity(c.city); setCountry(c.country); setCityQuery(c.label); setCityOpen(false); }}
+                              onMouseDown={e=>e.preventDefault()}
+                              onMouseEnter={e=>e.currentTarget.style.background="#f2f7ff"}
+                              onMouseLeave={e=>e.currentTarget.style.background="#fff"}
+                              style={{padding:"8px 12px",fontSize:13,color:SF_NAVY,cursor:"pointer",borderBottom:i<cityMatches.length-1?"1px solid #f0f0f0":"none"}}>
+                              {c.label}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {country && <div style={{fontSize:11,color:"#888",marginTop:4}}>Country: <strong style={{color:SF_NAVY}}>{country}</strong></div>}
                   </div>
 
                   {/* Region selector */}
