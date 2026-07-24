@@ -1180,13 +1180,23 @@ export default function App() {
           </div>
         </div>
         {/* Tab navigation */}
-        <div style={{maxWidth:1400,margin:"0 auto",padding:"0 24px",display:"flex",borderTop:"1px solid rgba(255,255,255,0.1)"}}>
-          {[["program","Building Program"],["calc","Calculator"],["results","Results"],["comparison","Comparison"],["tiers","Tiers & Regions"],["bu","Business Units"],["db","Space Types"]].map(([id,label])=>(
+        <div style={{maxWidth:1400,margin:"0 auto",padding:"0 24px",display:"flex",alignItems:"center",borderTop:"1px solid rgba(255,255,255,0.1)"}}>
+          {[["program","Building Program"],["calc","Calculator"],["results","Results"],["comparison","Comparison"]].map(([id,label])=>(
             <button key={id} onClick={()=>setTab(id)}
               onMouseEnter={e=>{if(tab!==id)e.currentTarget.style.color="rgba(255,255,255,0.85)"}}
               onMouseLeave={e=>{if(tab!==id)e.currentTarget.style.color="rgba(255,255,255,0.55)"}}
               style={{background:"none",border:"none",color:tab===id?"#fff":"rgba(255,255,255,0.55)",padding:"11px 17px",cursor:"pointer",fontSize:13,borderBottom:tab===id?`2.5px solid ${SF_BLUE}`:"2.5px solid transparent",fontWeight:tab===id?700:500,letterSpacing:tab===id?"0.01em":"normal",transition:"color 0.15s"}}>{label}</button>
           ))}
+          {/* Backend / reference data tabs — pushed to the right and de-emphasized */}
+          <div style={{marginLeft:"auto",display:"flex",alignItems:"center",borderLeft:"1px solid rgba(255,255,255,0.12)",paddingLeft:12}}>
+            <span style={{color:"rgba(255,255,255,0.25)",fontSize:10,letterSpacing:"0.08em",textTransform:"uppercase",marginRight:4,userSelect:"none"}}>Data</span>
+            {[["tiers","Tiers & Regions"],["bu","Business Units"],["db","Space Types"]].map(([id,label])=>(
+              <button key={id} onClick={()=>setTab(id)}
+                onMouseEnter={e=>{if(tab!==id)e.currentTarget.style.color="rgba(255,255,255,0.6)"}}
+                onMouseLeave={e=>{if(tab!==id)e.currentTarget.style.color="rgba(255,255,255,0.3)"}}
+                style={{background:"none",border:"none",color:tab===id?"rgba(255,255,255,0.9)":"rgba(255,255,255,0.3)",padding:"11px 12px",cursor:"pointer",fontSize:12,borderBottom:tab===id?`2.5px solid ${SF_BLUE}`:"2.5px solid transparent",fontWeight:tab===id?600:400,transition:"color 0.15s"}}>{label}</button>
+            ))}
+          </div>
         </div>
       </div>
 
