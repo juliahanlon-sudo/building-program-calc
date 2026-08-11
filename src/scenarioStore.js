@@ -72,3 +72,42 @@ export async function saveScenario(scenarioId, name, data) {
 export async function deleteScenario(scenarioId) {
   writeAll(readAll().filter(s => s.id !== scenarioId));
 }
+
+// Returns a JSON string of all scenarios, suitable for downloading as a
+// backup / for moving scenarios between machines or sandboxed hosts.
+export async function exportScenarios() {
+  return JSON.stringify(
+    { version: 1, exportedAt: Date.now(), scenarios: readAll() },
+    null,
+    2
+  );
+}
+
+// Imports scenarios from an exported JSON string. Existing scenarios with a
+// matching id are overwritten; new ones are added. Returns the number of
+// scenarios imported. Throws on malformed input.
+export async function importScenarios(json) {
+  const parsed = JSON.parse(json);
+  // Accept either the wrapped export shape or a bare array of scenarios.
+  const incoming = Array.isArray(parsed) ? parsed : parsed?.scenarios;
+  if (!Array.isArray(incoming)) {
+    throw new Error("File does not contain a scenarios array.");
+  }
+  const list = readAll();
+  const byId = new Map(list.map(s => [s.id, s]));
+  let count = 0;
+  for (const s of incoming) {
+    if (!s || typeof s !== "object" || !s.name || !("data" in s)) continue;
+    const id = s.id || uid();
+    byId.set(id, {
+      id,
+      name: s.name,
+      data: s.data,
+      createdAt: s.createdAt ?? Date.now(),
+      updatedAt: s.updatedAt ?? Date.now(),
+    });
+    count++;
+  }
+  writeAll([...byId.values()]);
+  return count;
+}

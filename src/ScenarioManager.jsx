@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { saveScenario, getScenarios, deleteScenario } from "./scenarioStore.js";
+import { useState, useEffect, useRef } from "react";
+import { saveScenario, getScenarios, deleteScenario, exportScenarios, importScenarios } from "./scenarioStore.js";
 
 const SF_BLUE = "#0176D3";
 const SF_NAVY = "#032D60";
@@ -9,6 +9,8 @@ export default function ScenarioManager({ currentState, onLoad, onClose }) {
   const [loading, setLoading]     = useState(true);
   const [saving, setSaving]       = useState(false);
   const [saveName, setSaveName]   = useState("");
+  const [notice, setNotice]       = useState(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => { loadAll(); }, []);
 
@@ -39,6 +41,34 @@ export default function ScenarioManager({ currentState, onLoad, onClose }) {
     await deleteScenario(s.id); await loadAll();
   };
 
+  const handleExport = async () => {
+    const json = await exportScenarios();
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `space-planner-scenarios-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-importing the same file later
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const n = await importScenarios(text);
+      await loadAll();
+      setNotice({ type: "ok", msg: `Imported ${n} scenario${n === 1 ? "" : "s"}.` });
+    } catch (err) {
+      setNotice({ type: "err", msg: `Import failed: ${err.message}` });
+    }
+  };
+
   const iStyle = { width:"100%", padding:"9px 12px", border:"1px solid #ddd", borderRadius:8, fontSize:13, color:SF_NAVY, outline:"none", boxSizing:"border-box", fontFamily:"inherit" };
 
   const ScenarioRow = ({ s }) => {
@@ -65,8 +95,19 @@ export default function ScenarioManager({ currentState, onLoad, onClose }) {
       <div style={{width:580,maxHeight:"85vh",background:"#fff",borderRadius:16,display:"flex",flexDirection:"column",boxShadow:"0 8px 48px rgba(0,0,0,0.18)"}}>
         <div style={{padding:"20px 24px 16px",borderBottom:"1px solid #eee",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div style={{fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",fontSize:20,color:SF_NAVY}}>Scenarios</div>
-          <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,color:"#aaa"}}>✕</button>
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            <button onClick={handleExport} title="Download all scenarios as a JSON backup" style={{padding:"5px 12px",borderRadius:6,border:"1px solid #ddd",background:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",color:"#555"}}>Export</button>
+            <button onClick={()=>fileInputRef.current?.click()} title="Import scenarios from a JSON backup" style={{padding:"5px 12px",borderRadius:6,border:"1px solid #ddd",background:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",color:"#555"}}>Import</button>
+            <input ref={fileInputRef} type="file" accept="application/json,.json" onChange={handleImportFile} style={{display:"none"}} />
+            <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,color:"#aaa"}}>✕</button>
+          </div>
         </div>
+        {notice && (
+          <div style={{padding:"8px 24px",fontSize:12,fontWeight:600,background:notice.type==="ok"?"#ecfdf5":"#fef2f2",color:notice.type==="ok"?"#047857":"#b91c1c",borderBottom:"1px solid #eee",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span>{notice.msg}</span>
+            <button onClick={()=>setNotice(null)} style={{background:"none",border:"none",cursor:"pointer",color:"inherit",fontSize:14}}>✕</button>
+          </div>
+        )}
         <div style={{padding:"16px 24px",borderBottom:"1px solid #eee",background:"#fafeff"}}>
           <div style={{fontSize:12,fontWeight:700,color:SF_BLUE,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:10}}>Save Current Scenario</div>
           <div style={{display:"flex",gap:8}}>
