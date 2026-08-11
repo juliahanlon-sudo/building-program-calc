@@ -422,7 +422,7 @@ function StatCard({label,value,accent,sub}) {
 function Panel({title,children}) {
   return (
     <div style={{background:"#fff",border:"1px solid #E6E4E2",borderRadius:12,padding:18,boxShadow:"0 1px 3px rgba(0,0,30,0.05), 0 4px 12px rgba(0,0,30,0.03)"}}>
-      <div style={{fontSize:11,letterSpacing:"0.12em",color:SF_LABEL,fontWeight:700,marginBottom:14,textTransform:"uppercase"}}>{title}</div>
+      {title && <div style={{fontSize:11,letterSpacing:"0.12em",color:SF_LABEL,fontWeight:700,marginBottom:14,textTransform:"uppercase"}}>{title}</div>}
       {children}
     </div>
   );
@@ -1222,7 +1222,7 @@ export default function App() {
         {tab==="calc" && (
           <div style={{display:"grid",gridTemplateColumns:"275px minmax(0,900px)",gap:16,alignItems:"start",justifyContent:"center"}}>
             <div style={{display:"flex",flexDirection:"column",gap:12}}>
-              <Panel title="Configuration">
+              <Panel>
                 <Field label="Project Name"><input type="text" value={projectName} placeholder="e.g. Tower 3 Refresh" onChange={e=>setProjectName(e.target.value)} style={{...iStyle,fontWeight:400}}/></Field>
                 <Field label="City / Location">
                   <div ref={cityBoxRef} style={{position:"relative"}}>
@@ -1685,10 +1685,6 @@ export default function App() {
               {/* LEFT — Config */}
               <div style={{flex:"0 0 300px",minWidth:260,display:"flex",flexDirection:"column",gap:12}}>
                 <div style={{background:"#fff",border:`1px solid ${SF_GRAY_300}`,borderRadius:8,padding:"20px",boxShadow:"0 1px 3px rgba(0,0,30,0.08)"}}>
-                  <div style={{fontSize:12,fontWeight:800,color:SF_NAVY,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:16,paddingBottom:12,borderBottom:"1px solid #eee"}}>
-                    Configuration
-                  </div>
-
                   {/* Project Name — shared with Calculator tab */}
                   <div style={{marginBottom:16}}>
                     <label style={labelStyle}>Project Name</label>
