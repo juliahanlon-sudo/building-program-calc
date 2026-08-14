@@ -225,7 +225,7 @@ const SPACE_GROUPS = [
   ]},
   // ── WORKPLACE SPECIALTY ─────────────────────────────────────────────────
   { id:"wpspec", label:"Workplace Specialty", superGroup:"workspace", color:"#FCC003", spaces:[
-    { id:"social_lounge",   label:"Social Lounge",     type:"non-capacity", sf:400, baseRatio:1, fixedCount:1, seatsPerSpace:20, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
+    { id:"social_lounge",   label:"Social Lounge",     type:"non-capacity", sf:400, sfPctOfAsf:0.10, baseRatio:1, fixedCount:1, seatsPerSpace:20, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"water_point",     label:"Water Point",       type:"none", sf:200, baseRatio:0.25, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"mindfulness",     label:"Mindfulness",       type:"non-capacity", sf:250, baseRatio:0.20, fixedCount:1, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"reflection_room", label:"Reflection Room",   type:"non-capacity", sf:500, baseRatio:0.15, fixedCount:1, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
@@ -917,8 +917,12 @@ export default function App() {
 
   const results = useMemo(()=>{
     const allSp = allSpaces();
+    // A space's default SF is normally sp.sf, but some spaces (e.g. Social
+    // Lounge) are sized as a percentage of the floor's ASF; use that when ASF
+    // is known, falling back to the fixed sp.sf otherwise. A user sfOver always wins.
+    const dfltSf = sp => sp.sfPctOfAsf && effectiveAsf>0 ? Math.round(effectiveAsf*sp.sfPctOfAsf) : sp.sf;
     const pass1 = allSp.map(sp=>{
-      if (sp.isDeskPct||sp.isRoomType) return {...sp,count:0,spaces:0,sf:sfOver[sp.id]??sp.sf,totalSf:0,rooms:0};
+      if (sp.isDeskPct||sp.isRoomType) return {...sp,count:0,spaces:0,sf:sfOver[sp.id]??dfltSf(sp),totalSf:0,rooms:0};
       const rawR = ratios[sp.id]??0;
       // Floor-driven spaces (IDF per floor, Copy Print every 3rd floor, MDF per
       // building) derive their count from the level count, not a ratio.
@@ -935,7 +939,7 @@ export default function App() {
       if(TRAINING_IDS.includes(sp.id) && rawR>0 && spaces<1) spaces = 1;
       const seatsPer = sp.seatsPerSpace ? (spaceSeats[sp.id] ?? sp.seatsPerSpace) : 1;
       const count  = sp.seatsPerSpace ? spaces * seatsPer : spaces;
-      const sf = sfOver[sp.id]??sp.sf;
+      const sf = sfOver[sp.id]??dfltSf(sp);
       return {...sp,spaces,count,sf,totalSf:spaces*sf,rooms:0};
     });
     // wsCap for desk calculation = number of non-desk workspace capacity spaces (not multiplied by seatsPerSpace)
@@ -944,7 +948,7 @@ export default function App() {
       if (!sp.isDeskPct) return sp;
       const pct = ratios[sp.id]??0.90;
       const count = pct<1 ? Math.round((pct*wsCap)/(1-pct)) : 0;
-      const sf = sfOver[sp.id]??sp.sf;
+      const sf = sfOver[sp.id]??dfltSf(sp);
       return {...sp,count,sf,totalSf:count*sf,rooms:0};
     });
     const totalWsCap = pass2.filter(r=>r.type==="capacity"&&WORKSPACE_IDS.includes(r.groupId)).reduce((a,r)=>a+r.count,0);
@@ -956,17 +960,17 @@ export default function App() {
       if (sp.id==="techforce" || sp.id==="techforce_lab") {
         const spaces  = techforceSeats>0 ? 1 : 0;
         const seatsPer = spaceSeats[sp.id] ?? techforceSeats;
-        const sf = sfOver[sp.id]??sp.sf;
+        const sf = sfOver[sp.id]??dfltSf(sp);
         return {...sp,spaces,count:spaces*seatsPer,sf,totalSf:spaces*sf,rooms:0,seatsPer};
       }
       if (!sp.isRoomType) return sp;
       const effN = ratios[sp.id]??sp.roomRatio;
       const rooms = (effN>0 && !roomDisabled.has(sp.id)) ? Math.round(totalWsCap/effN) : 0;
       const seatsPer = roomSeats[sp.id]??sp.seatsPerRoom??1;
-      const sf = sfOver[sp.id]??sp.sf;
+      const sf = sfOver[sp.id]??dfltSf(sp);
       return {...sp,count:rooms*seatsPer,sf,totalSf:rooms*sf,rooms,seatsPer,effectiveN:effN};
     });
-  },[planRef,ratios,sfOver,roomSeats,spaceSeats,fixedExcluded,bpcFloors,floorOverride,roomDisabled,country]);
+  },[planRef,ratios,sfOver,roomSeats,spaceSeats,fixedExcluded,bpcFloors,floorOverride,roomDisabled,country,effectiveAsf]);
 
   // Bases needed to back-solve a ratio from a typed Spaces count (editable Spaces field).
   const capBases = useMemo(()=>{
