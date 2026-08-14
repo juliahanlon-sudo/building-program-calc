@@ -208,7 +208,7 @@ const SPACE_GROUPS = [
     { id:"private_office",        label:"Private Office",         type:"capacity",     sf:150, baseRatio:0, seatsPerSpace:1, regionMult:{AMER:1.00,EMEA:1.10,JAPAC:0.80,India:0.90,LATAM:0.90} },
     { id:"touchdown_seat",        label:"Touchdown Seat",         type:"capacity",     sf:36,  baseRatio:0.05, seatsPerSpace:1, regionMult:{AMER:1.00,EMEA:1.10,JAPAC:1.20,India:0.80,LATAM:0.90} },
     { id:"library",               label:"Library",                type:"capacity",     sf:60,  baseRatio:0.01, seatsPerSpace:14, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.10,India:0.70,LATAM:0.80} },
-    { id:"work_room",             label:"Work Room",              type:"capacity",     sf:100, baseRatio:0.01, seatsPerSpace:6, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:0.80,LATAM:0.90} },
+    { id:"work_room",             label:"Work Room",              type:"capacity",     sf:100, baseRatio:0, seatsPerSpace:6, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:0.80,LATAM:0.90} },
   ]},
   // ── ENCLOSED COLLABORATION ──────────────────────────────────────────────
   { id:"enclosed", label:"Enclosed Collaboration", superGroup:"workspace", color:"#0B5CAB", spaces:[
@@ -226,13 +226,13 @@ const SPACE_GROUPS = [
   // ── WORKPLACE SPECIALTY ─────────────────────────────────────────────────
   { id:"wpspec", label:"Workplace Specialty", superGroup:"workspace", color:"#FCC003", spaces:[
     { id:"social_lounge",   label:"Social Lounge",     type:"non-capacity", sf:400, sfPctOfAsf:0.10, baseRatio:1, fixedCount:1, seatsPerSpace:20, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
-    { id:"water_point",     label:"Water Point",       type:"none", sf:200, baseRatio:0.25, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
+    { id:"water_point",     label:"Water Point",       type:"none", sf:200, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"mindfulness",     label:"Mindfulness",       type:"non-capacity", sf:250, baseRatio:0.20, fixedCount:1, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"reflection_room", label:"Reflection Room",   type:"non-capacity", sf:500, baseRatio:0.15, fixedCount:1, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"catering_pantry", label:"Catering Pantry",   type:"non-capacity", sf:150, baseRatio:0, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"flex_room",       label:"Flex Room",         type:"non-capacity", sf:200, baseRatio:0.10, seatsPerSpace:6, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"multifaith_room", label:"Multifaith Room",   type:"non-capacity", sf:150, baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
-    { id:"parents_room",    label:"Parent's Room",     type:"non-capacity", sf:100, baseRatio:0.10, seatsPerSpace:1, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
+    { id:"parents_room",    label:"Parent's Room",     type:"non-capacity", sf:100, baseRatio:0.10, fixedCount:1, seatsPerSpace:1, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"reception_ws",    label:"Reception",         type:"non-capacity", sf:200, baseRatio:0.10, fixedCount:1, seatsPerSpace:2, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"reception_lounge",label:"Reception Lounge",  type:"non-capacity", sf:300, baseRatio:0.10, fixedCount:1, seatsPerSpace:8, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"treadmill_desk",  label:"Treadmill Desk",    type:"non-capacity", sf:40,  baseRatio:0.05, seatsPerSpace:1, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
@@ -326,7 +326,6 @@ const SPACE_GROUPS = [
     { id:"restroom",      label:"Restroom",                   type:"none", sf:200, baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"staff_room",    label:"Staff Room",                 type:"non-capacity", sf:100, baseRatio:0, seatsPerSpace:6, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
     { id:"storage_sup",   label:"Storage",                    type:"none", sf:150, baseRatio:0.10, floorRule:{type:"perFloor",per:3}, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
-    { id:"team_storage",  label:"Team Storage",               type:"none", sf:7,   baseRatio:0.10, regionMult:{AMER:1.00,EMEA:1.00,JAPAC:1.00,India:1.00,LATAM:1.00} },
   ]},
 ];
 
