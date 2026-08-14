@@ -32,14 +32,24 @@
       input[type=number]::-webkit-inner-spin-button,
       input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
       input[type=number] { -moz-appearance: textfield; }
-      /* Consistent, on-brand focus ring */
-      input:focus-visible, select:focus-visible, button:focus-visible, textarea:focus-visible {
+      /* Consistent, on-brand focus ring. Outline + a box-shadow twin: several
+         inputs set outline:none inline (which beats a stylesheet outline), so
+         the shadow guarantees a visible keyboard focus ring everywhere. */
+      input:focus-visible, select:focus-visible, button:focus-visible, textarea:focus-visible,
+      a:focus-visible, [tabindex]:focus-visible {
         outline: 2px solid #066AFE; outline-offset: 1px;
+        box-shadow: 0 0 0 3px rgba(6, 106, 254, 0.28);
       }
+      /* On-brand text selection */
+      ::selection { background: #CDE3FF; color: #001E5B; }
+      /* Caret matches the primary accent */
+      input, textarea, [contenteditable] { caret-color: #066AFE; }
       /* Subtle custom scrollbar */
       *::-webkit-scrollbar { width: 10px; height: 10px; }
+      *::-webkit-scrollbar-track { background: #F3F3F3; }
       *::-webkit-scrollbar-thumb { background: #C9C7C5; border-radius: 8px; border: 2px solid #F3F3F3; }
       *::-webkit-scrollbar-thumb:hover { background: #B0AEAC; }
+      * { scrollbar-color: #C9C7C5 #F3F3F3; }
     </style>
   </head>
   <body>

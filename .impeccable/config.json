@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-08-14T20:02:56.623Z",
+        "reason": "Incumbent visual world: Inter is the self-hosted, base64-embedded brand face matching Salesforce Sans identity for this offline single-file Operate tool; swapping it would be redesign, not the requested polish."
+      }
+    ]
+  }
+}

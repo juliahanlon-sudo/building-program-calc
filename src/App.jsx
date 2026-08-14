@@ -120,7 +120,7 @@ function BpcPieChart({segments}) {
         <text x={cx} y={cy-6} textAnchor="middle" style={{fontSize:22,fontWeight:800,fill:SF_NAVY,fontVariantNumeric:"tabular-nums"}}>
           {Math.round(total).toLocaleString()}
         </text>
-        <text x={cx} y={cy+14} textAnchor="middle" style={{fontSize:11,fill:"#888",letterSpacing:"0.08em"}}>SF TOTAL</text>
+        <text x={cx} y={cy+14} textAnchor="middle" style={{fontSize:11,fill:SF_SUBTLE,letterSpacing:"0.08em"}}>SF TOTAL</text>
       </svg>
       <div style={{display:"flex",flexDirection:"column",gap:12,minWidth:150}}>
         {data.map((s,i)=>(
@@ -461,10 +461,10 @@ function TierCell({value,onChange,suffix,active,color,step=1,width=48,locked}) {
   );
 }
 
-function SeatStat({label,value,color,bold,sub,subColor}) {
+function SeatStat({label,value,color,bold,sub,subColor,divider}) {
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:3,flex:1,minWidth:0}}>
-      <div style={{fontSize:11,letterSpacing:"0.08em",color:SF_LABEL,fontWeight:700,textTransform:"uppercase",whiteSpace:"nowrap"}}>{label}</div>
+    <div style={{display:"flex",flexDirection:"column",gap:3,minWidth:0,paddingLeft:divider?13:0,marginLeft:divider?12:0,borderLeft:divider?"1px solid #e0e0e0":"none"}}>
+      <div style={{fontSize:11,letterSpacing:"0.08em",color:SF_LABEL,fontWeight:700,textTransform:"uppercase",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{label}</div>
       <div style={{fontSize:20,fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",color,fontVariantNumeric:"tabular-nums",fontWeight:700,lineHeight:1}}>{value}</div>
       {sub && <div style={{fontSize:11,color:subColor??SF_SUBTLE,fontWeight:600}}>{sub}</div>}
     </div>
@@ -532,7 +532,7 @@ function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,base
           {disabled ? (
             // Off by default (e.g. Phone Room Micro, Aloha) — ratio shows greyed; click to activate.
             <span onClick={()=>toggleRoomDisabled(sp.id)} title="Click to activate this space"
-              style={{fontSize:14,fontWeight:700,color:"#bbb",background:"#f4f4f4",border:"1px dashed #d0d0d0",borderRadius:6,padding:"3px 10px",fontVariantNumeric:"tabular-nums",whiteSpace:"nowrap",cursor:"pointer"}}>
+              style={{fontSize:14,fontWeight:700,color:"#94918E",background:"#f4f4f4",border:"1px dashed #d0d0d0",borderRadius:6,padding:"3px 10px",fontVariantNumeric:"tabular-nums",whiteSpace:"nowrap",cursor:"pointer"}}>
               1 : {effN}
             </span>
           ) : locked ? (
@@ -542,7 +542,7 @@ function RoomRow({sp,results,ratios,setRatios,roomSeats,setRoomSeats,locked,base
             </span>
           ) : (
             <div style={{display:"flex",alignItems:"center",gap:4}}>
-              <span style={{fontSize:12,color:"#888"}}>1 :</span>
+              <span style={{fontSize:12,color:SF_SUBTLE}}>1 :</span>
               <input type="number" min={1} max={500} value={effN}
                 onChange={e=>setRatios(r=>({...r,[sp.id]:parseInt(e.target.value)||sp.roomRatio}))}
                 style={{width:52,padding:"3px 6px",border:`1.5px solid ${modified?"#e6a817":"#0B5CAB44"}`,borderRadius:6,fontSize:13,fontWeight:700,color:modified?"#b45309":"#0B5CAB",textAlign:"center"}}/>
@@ -1133,7 +1133,7 @@ export default function App() {
   ];
 
   return (
-    <div style={{fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",background:"#f3f3f3",minHeight:"100vh"}}>
+    <div style={{fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",background:"#f3f3f3",minHeight:"100vh",overflowX:"hidden"}}>
       <style>{`@media print{.no-print{display:none!important}.print-only{display:block!important}body{background:#fff}}`}</style>
       {/* Header */}
       <div className="no-print" style={{background:`linear-gradient(180deg, #002A7A 0%, ${SF_NAVY} 100%)`,position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 12px rgba(0,0,30,0.22)"}}>
@@ -1183,15 +1183,15 @@ export default function App() {
           </div>
         </div>
         {/* Tab navigation */}
-        <div style={{maxWidth:1400,margin:"0 auto",padding:"0 24px",display:"flex",alignItems:"center",borderTop:"1px solid rgba(255,255,255,0.1)"}}>
+        <div style={{maxWidth:1400,margin:"0 auto",padding:"0 24px",display:"flex",alignItems:"center",borderTop:"1px solid rgba(255,255,255,0.1)",overflowX:"auto",WebkitOverflowScrolling:"touch"}}>
           {[["program","Building Program"],["calc","Calculator"],["results","Results"],["comparison","Comparison"]].map(([id,label])=>(
             <button key={id} onClick={()=>setTab(id)}
               onMouseEnter={e=>{if(tab!==id)e.currentTarget.style.color="rgba(255,255,255,0.85)"}}
               onMouseLeave={e=>{if(tab!==id)e.currentTarget.style.color="rgba(255,255,255,0.55)"}}
-              style={{background:"none",border:"none",color:tab===id?"#fff":"rgba(255,255,255,0.55)",padding:"11px 17px",cursor:"pointer",fontSize:13,borderBottom:tab===id?`2.5px solid ${SF_BLUE}`:"2.5px solid transparent",fontWeight:tab===id?700:500,letterSpacing:tab===id?"0.01em":"normal",transition:"color 0.15s"}}>{label}</button>
+              style={{background:"none",border:"none",color:tab===id?"#fff":"rgba(255,255,255,0.55)",padding:"11px 17px",cursor:"pointer",fontSize:13,borderBottom:tab===id?`2.5px solid ${SF_BLUE}`:"2.5px solid transparent",fontWeight:tab===id?700:500,letterSpacing:tab===id?"0.01em":"normal",transition:"color 0.15s",whiteSpace:"nowrap",flexShrink:0}}>{label}</button>
           ))}
           {/* Backend / reference data tabs — pushed to the right and de-emphasized */}
-          <div style={{marginLeft:"auto",display:"flex",alignItems:"center",borderLeft:"1px solid rgba(255,255,255,0.12)",paddingLeft:12}}>
+          <div style={{marginLeft:"auto",display:"flex",alignItems:"center",borderLeft:"1px solid rgba(255,255,255,0.12)",paddingLeft:12,flexShrink:0}}>
             <span style={{color:"rgba(255,255,255,0.25)",fontSize:10,letterSpacing:"0.08em",textTransform:"uppercase",marginRight:4,userSelect:"none"}}>Data</span>
             {[["tiers","Tiers & Regions"],["bu","Business Units"],["db","Space Types"]].map(([id,label])=>(
               <button key={id} onClick={()=>setTab(id)}
@@ -1209,7 +1209,7 @@ export default function App() {
         <div className="print-only" style={{display:"none",marginBottom:20}}>
           <div style={{fontSize:10,letterSpacing:"0.2em",color:SF_BLUE}}>SALESFORCE WORKPLACE DESIGN — SPACE PLANNING CALCULATOR</div>
           {city && <div style={{fontSize:16,fontWeight:700,color:SF_NAVY,marginTop:4}}>{city}</div>}
-          <div style={{fontSize:12,color:"#888",marginTop:2}}>Generated {new Date().toLocaleDateString()}</div>
+          <div style={{fontSize:12,color:SF_SUBTLE,marginTop:2}}>Generated {new Date().toLocaleDateString()}</div>
         </div>
 
         {/* Stat cards — hidden on Building Program (own layout), Calculator (seat
@@ -1429,8 +1429,10 @@ export default function App() {
             </div>
 
             <div style={{display:"flex",flexDirection:"column",gap:14}}>
-              {/* Seat summary bar */}
-              <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"14px 20px",display:"flex",alignItems:"flex-start",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+              {/* Seat summary bar — responsive grid so stats wrap instead of
+                  colliding on narrow widths; hairline separators drawn as cell
+                  borders that disappear at the start of each wrapped row. */}
+              <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"14px 20px",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:"12px 0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
                 <SeatStat label="Capacity Seats" value={summary.cap} color="#70BF75" sub={(()=>{
                   const parts = [];
                   if(summary.wsCap>0)   parts.push(`${summary.wsCap} ws`);
@@ -1439,20 +1441,16 @@ export default function App() {
                   if(summary.otherCap>0) parts.push(`${summary.otherCap} other`);
                   return parts.length>0 ? parts.join(" + ") : `Target ${targetCapMin}–${targetCapMax}`;
                 })()} subColor={dsc}/>
-                <div style={{width:1,background:"#e0e0e0",alignSelf:"stretch",margin:"0 12px"}}/>
-                <SeatStat label="Non-Capacity" value={summary.noncap} color="#7B68EE"/>
-                <div style={{width:1,background:"#e0e0e0",alignSelf:"stretch",margin:"0 12px"}}/>
-                <SeatStat label="Total Seats" value={summary.total} color={SF_NAVY} bold/>
-                <div style={{width:1,background:"#e0e0e0",alignSelf:"stretch",margin:"0 12px"}}/>
-                <SeatStat label="SF / Cap Seat" value={summary.actualDensity?`${summary.actualDensity} SF`:"—"} color={dsc} sub={sLabel(summary.dStatus)} subColor={dsc}/>
-                <div style={{width:1,background:"#e0e0e0",alignSelf:"stretch",margin:"0 12px"}}/>
-                <SeatStat label="Workspace ASF" value={workspaceAsf>=1000?`${(workspaceAsf/1000).toFixed(0)}k`:workspaceAsf} color="#F4A460" sub={`${Math.round(wsFrac*100)}% of total`}/>
+                <SeatStat label="Non-Capacity" value={summary.noncap} color="#7B68EE" divider/>
+                <SeatStat label="Total Seats" value={summary.total} color={SF_NAVY} bold divider/>
+                <SeatStat label="SF / Cap Seat" value={summary.actualDensity?`${summary.actualDensity} SF`:"—"} color={dsc} sub={sLabel(summary.dStatus)} subColor={dsc} divider/>
+                <SeatStat label="Workspace ASF" value={workspaceAsf>=1000?`${(workspaceAsf/1000).toFixed(0)}k`:workspaceAsf} color="#F4A460" sub={`${Math.round(wsFrac*100)}% of total`} divider/>
               </div>
 
               {summary.cap>0&&(
                 <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"12px 18px",display:"flex",alignItems:"center",gap:16}}>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:11,color:"#888",marginBottom:6}}>Density gauge (workspace SF) — target {densityMin}–{densityMax} SF/cap seat</div>
+                    <div style={{fontSize:11,color:SF_SUBTLE,marginBottom:6}}>Density gauge (workspace SF) — target {densityMin}–{densityMax} SF/cap seat</div>
                     <div style={{position:"relative",height:10,background:"#f0f0f0",borderRadius:5}}>
                       <div style={{position:"absolute",left:`${Math.min((densityMin/200)*100,100)}%`,width:`${Math.min(((densityMax-densityMin)/200)*100,100)}%`,height:"100%",background:`${GREEN}33`,borderRadius:3}}/>
                       <div style={{position:"absolute",left:`${Math.min((summary.actualDensity/200)*100,99)}%`,top:"-3px",width:3,height:"calc(100% + 6px)",background:dsc,borderRadius:2}}/>
@@ -1471,10 +1469,10 @@ export default function App() {
               )}
 
               {calcPie.overview.some(s=>s.value>0) && (
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(340px,1fr))",gap:16}}>
                   <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"18px"}}>
                     <div style={{fontSize:12,fontWeight:800,color:SF_NAVY,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:2}}>Space Pie Chart — Overview</div>
-                    <div style={{fontSize:11,color:"#888",marginBottom:14}}>Workspace vs. Amenity · by SF</div>
+                    <div style={{fontSize:11,color:SF_SUBTLE,marginBottom:14}}>Workspace vs. Amenity · by SF</div>
                     <BpcPieChart segments={calcPie.overview}/>
                     <div style={{fontSize:10,color:SF_SUBTLE,marginTop:10,fontStyle:"italic",lineHeight:1.4}}>
                       Note: Support SF is factored evenly into the Workspace and Amenity categories.
@@ -1516,7 +1514,7 @@ export default function App() {
                   </div>
                   <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"18px"}}>
                     <div style={{fontSize:12,fontWeight:800,color:SF_NAVY,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:2}}>Space Pie Chart — Detailed</div>
-                    <div style={{fontSize:11,color:"#888",marginBottom:14}}>Workspace subgroups + Amenity & Support · by SF</div>
+                    <div style={{fontSize:11,color:SF_SUBTLE,marginBottom:14}}>Workspace subgroups + Amenity & Support · by SF</div>
                     <BpcPieChart segments={calcPie.detailed}/>
                   </div>
                 </div>
@@ -1550,7 +1548,7 @@ export default function App() {
                               <div style={{width:10,height:10,borderRadius:"50%",background:g.color}}/>
                               <span style={{fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",fontSize:16,color:SF_NAVY}}>{g.label}</span>
                             </div>
-                            <div style={{display:"flex",gap:10,alignItems:"center",fontSize:11,color:"#888"}}>
+                            <div style={{display:"flex",gap:10,alignItems:"center",fontSize:11,color:SF_SUBTLE}}>
                               {isCollapsed
                                 ? <span style={{color:SF_LABEL,fontStyle:"italic"}}>hidden</span>
                                 : <><span><b style={{color:g.color}}>{gTotalSpaces}</b> spaces</span><span><b style={{color:SF_NAVY}}>{gTotalSeats}</b> seats</span></>
@@ -1633,7 +1631,7 @@ export default function App() {
                             <div style={{width:4,height:20,background:g.color,borderRadius:2}}/>
                             <span style={{fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",fontSize:15,color:SF_NAVY}}>{g.label}</span>
                           </div>
-                          <div style={{display:"flex",gap:12,fontSize:12,color:"#888"}}>
+                          <div style={{display:"flex",gap:12,fontSize:12,color:SF_SUBTLE}}>
                             {gr.filter(r=>r.type==="capacity").reduce((a,r)=>a+r.count,0)>0&&<span><b style={{color:"#70BF75"}}>{gr.filter(r=>r.type==="capacity").reduce((a,r)=>a+r.count,0)}</b> cap</span>}
                             {gr.filter(r=>r.type==="non-capacity").reduce((a,r)=>a+r.count,0)>0&&<span><b style={{color:"#7B68EE"}}>{gr.filter(r=>r.type==="non-capacity").reduce((a,r)=>a+r.count,0)}</b> non-cap</span>}
                             {gr.reduce((a,r)=>a+(r.rooms??0),0)>0&&<span><b style={{color:SF_NAVY}}>{gr.reduce((a,r)=>a+(r.rooms??0),0)}</b> rooms</span>}
@@ -1643,9 +1641,9 @@ export default function App() {
                         <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
                           <thead><tr>
                             {["Space Type","Type","Count","SF/Unit","Total SF"].map(h=>(
-                              <th key={h} style={{padding:"7px 12px",textAlign:h==="Space Type"?"left":"right",fontSize:11,color:"#888",borderBottom:"1px solid #e0e0e0",background:"#f7f7f7"}}>{h}</th>
+                              <th key={h} style={{padding:"7px 12px",textAlign:h==="Space Type"?"left":"right",fontSize:11,color:SF_SUBTLE,borderBottom:"1px solid #e0e0e0",background:"#f7f7f7"}}>{h}</th>
                             ))}
-                            {gr.some(r=>r.isRoomType)&&<><th style={{padding:"7px 12px",textAlign:"center",fontSize:11,color:"#888",borderBottom:"1px solid #e0e0e0",background:"#f7f7f7"}}>Ratio</th><th style={{padding:"7px 12px",textAlign:"right",fontSize:11,color:"#888",borderBottom:"1px solid #e0e0e0",background:"#f7f7f7"}}>Rooms</th></>}
+                            {gr.some(r=>r.isRoomType)&&<><th style={{padding:"7px 12px",textAlign:"center",fontSize:11,color:SF_SUBTLE,borderBottom:"1px solid #e0e0e0",background:"#f7f7f7"}}>Ratio</th><th style={{padding:"7px 12px",textAlign:"right",fontSize:11,color:SF_SUBTLE,borderBottom:"1px solid #e0e0e0",background:"#f7f7f7"}}>Rooms</th></>}
                           </tr></thead>
                           <tbody>
                             {gr.map((r,i)=>(
@@ -1718,7 +1716,7 @@ export default function App() {
                         </div>
                       )}
                     </div>
-                    {country && <div style={{fontSize:11,color:"#888",marginTop:4}}>Country: <strong style={{color:SF_NAVY}}>{country}</strong></div>}
+                    {country && <div style={{fontSize:11,color:SF_SUBTLE,marginTop:4}}>Country: <strong style={{color:SF_NAVY}}>{country}</strong></div>}
                   </div>
 
                   {/* Region selector */}
@@ -1743,22 +1741,22 @@ export default function App() {
                     <div style={{display:"flex",gap:8}}>
                       {[["Min",sharedDensityMin,setSharedDensityMin],["Max",sharedDensityMax,setSharedDensityMax]].map(([lbl,val,setter])=>(
                         <div key={lbl} style={{flex:1}}>
-                          <div style={{fontSize:10,color:"#888",marginBottom:3}}>{lbl}</div>
+                          <div style={{fontSize:10,color:SF_SUBTLE,marginBottom:3}}>{lbl}</div>
                           <div style={{display:"flex",border:"1px solid #ddd",borderRadius:7,overflow:"hidden"}}>
                             <input type="number" min={1} value={val} onChange={e=>setter(Number(e.target.value))} style={{flex:1,padding:"8px 8px",border:"none",outline:"none",fontSize:13,fontWeight:600,color:SF_NAVY,background:"transparent",minWidth:0,width:0,fontVariantNumeric:"tabular-nums"}}/>
-                            <span style={{padding:"0 8px",fontSize:11,color:"#888",borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>SF</span>
+                            <span style={{padding:"0 8px",fontSize:11,color:SF_SUBTLE,borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>SF</span>
                           </div>
                         </div>
                       ))}
                     </div>
-                    <div style={{fontSize:11,color:"#888",marginTop:6}}>Midpoint: <strong style={{color:SF_NAVY}}>{Math.round((sharedDensityMin+sharedDensityMax)/2)} SF/seat</strong></div>
+                    <div style={{fontSize:11,color:SF_SUBTLE,marginTop:6}}>Midpoint: <strong style={{color:SF_NAVY}}>{Math.round((sharedDensityMin+sharedDensityMax)/2)} SF/seat</strong></div>
                   </div>
 
                   <div style={{borderTop:"1px solid #eee",margin:"12px 0"}}/>
 
                   <div style={{marginBottom:4}}>
                     <span style={{fontSize:10,fontWeight:700,color:SF_BLUE,letterSpacing:"0.07em",textTransform:"uppercase",display:"block",marginBottom:6}}>Building Setup</span>
-                    <div style={{fontSize:11,color:"#888",marginBottom:12}}>Floor data feeds the Calculator tab</div>
+                    <div style={{fontSize:11,color:SF_SUBTLE,marginBottom:12}}>Floor data feeds the Calculator tab</div>
 
                     {/* ASF input */}
                     <div style={{marginBottom:12}}>
@@ -1770,7 +1768,7 @@ export default function App() {
                       </div>
                       <div style={{display:"flex",border:`1.5px solid ${bpcSfBase==="asf"?SF_BLUE:"#ddd"}`,borderRadius:8,overflow:"hidden",boxShadow:bpcSfBase==="asf"?`0 0 0 3px ${SF_BLUE}18`:"none"}}>
                         <input type="number" min={0} value={bpcAsfValue} onChange={e=>setBpcAsfValue(Number(e.target.value))} style={{flex:1,padding:"9px 12px",border:"none",outline:"none",fontSize:14,fontWeight:600,color:SF_NAVY,background:"transparent",fontVariantNumeric:"tabular-nums"}}/>
-                        <span style={{padding:"0 12px",fontSize:12,color:"#888",borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>SF</span>
+                        <span style={{padding:"0 12px",fontSize:12,color:SF_SUBTLE,borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>SF</span>
                       </div>
                     </div>
 
@@ -1784,7 +1782,7 @@ export default function App() {
                       </div>
                       <div style={{display:"flex",border:`1.5px solid ${bpcSfBase==="rsf"?SF_BLUE:"#ddd"}`,borderRadius:8,overflow:"hidden",boxShadow:bpcSfBase==="rsf"?`0 0 0 3px ${SF_BLUE}18`:"none"}}>
                         <input type="number" min={0} value={bpcBuildingRSF} onChange={e=>setBpcBuildingRSF(Number(e.target.value))} style={{flex:1,padding:"9px 12px",border:"none",outline:"none",fontSize:14,fontWeight:600,color:SF_NAVY,background:"transparent",fontVariantNumeric:"tabular-nums"}}/>
-                        <span style={{padding:"0 12px",fontSize:12,color:"#888",borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>SF</span>
+                        <span style={{padding:"0 12px",fontSize:12,color:SF_SUBTLE,borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>SF</span>
                       </div>
                     </div>
 
@@ -1811,7 +1809,7 @@ export default function App() {
                           <label style={{...labelStyle,color:SF_BLUE}}>{bpcSfBase==="asf"?"ASF":"RSF"} Per Floor</label>
                           <div style={{display:"flex",border:`1.5px solid ${SF_BLUE}`,borderRadius:8,overflow:"hidden",boxShadow:`0 0 0 3px ${SF_BLUE}18`}}>
                             <input type="number" min={0} value={bpcPerFloorRSF} onChange={e=>setBpcPerFloorRSF(Number(e.target.value))} style={{flex:1,padding:"9px 12px",border:"none",outline:"none",fontSize:14,fontWeight:600,color:SF_NAVY,background:"transparent"}}/>
-                            <span style={{padding:"0 12px",fontSize:12,color:"#888",borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>SF</span>
+                            <span style={{padding:"0 12px",fontSize:12,color:SF_SUBTLE,borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>SF</span>
                           </div>
                           <div style={{fontSize:11,color:SF_SUBTLE,marginTop:4}}>Total: {(bpcPerFloorRSF*bpcFloors).toLocaleString()} SF</div>
                         </div>
@@ -1826,7 +1824,7 @@ export default function App() {
                                 <span style={{fontSize:11,fontWeight:700,color:SF_BLUE,width:52,flexShrink:0}}>Floor {i+1}</span>
                                 <div style={{display:"flex",flex:1,border:`1.5px solid ${SF_BLUE}`,borderRadius:6,overflow:"hidden"}}>
                                   <input type="number" min={0} value={bpcFloorRSFs[i]??10000} onChange={e=>updateBpcFloorRSF(i,Number(e.target.value))} style={{flex:1,padding:"6px 10px",border:"none",outline:"none",fontSize:13,fontWeight:600,color:SF_NAVY,background:"transparent"}}/>
-                                  <span style={{padding:"0 8px",fontSize:11,color:"#888",borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>SF</span>
+                                  <span style={{padding:"0 8px",fontSize:11,color:SF_SUBTLE,borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>SF</span>
                                 </div>
                               </div>
                             ))}
@@ -1844,9 +1842,9 @@ export default function App() {
                       <label style={labelStyle}>Amenity Seats (manual)</label>
                       <div style={{display:"flex",border:"1px solid #ddd",borderRadius:8,overflow:"hidden"}}>
                         <input type="number" min={0} value={bpcAmenitySeats} onChange={e=>setBpcAmenitySeats(Number(e.target.value))} style={{flex:1,padding:"9px 12px",border:"none",outline:"none",fontSize:14,fontWeight:600,color:SF_NAVY,background:"transparent"}}/>
-                        <span style={{padding:"0 12px",fontSize:12,color:"#888",borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>seats</span>
+                        <span style={{padding:"0 12px",fontSize:12,color:SF_SUBTLE,borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>seats</span>
                       </div>
-                      <div style={{fontSize:11,color:"#888",marginTop:5}}>{Math.round(bpcAmenitySeats*BPC_AMENITY_CAP_FACTOR)} count toward capacity ({Math.round(BPC_AMENITY_CAP_FACTOR*100)}% factor)</div>
+                      <div style={{fontSize:11,color:SF_SUBTLE,marginTop:5}}>{Math.round(bpcAmenitySeats*BPC_AMENITY_CAP_FACTOR)} count toward capacity ({Math.round(BPC_AMENITY_CAP_FACTOR*100)}% factor)</div>
                     </div>
                   </div>
                 </div>
@@ -1877,7 +1875,7 @@ export default function App() {
                             <input type="number" min={0} max={20000} step={1} value={estSeats}
                               onChange={e=>setEstSeats(parseInt(e.target.value)||0)}
                               style={{flex:1,padding:"9px 12px",border:"none",outline:"none",fontSize:14,fontWeight:600,color:SF_NAVY,background:"transparent",fontVariantNumeric:"tabular-nums"}}/>
-                            <span style={{padding:"0 12px",fontSize:12,color:"#888",borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>seats</span>
+                            <span style={{padding:"0 12px",fontSize:12,color:SF_SUBTLE,borderLeft:"1px solid #ddd",display:"flex",alignItems:"center",background:"#fafafa"}}>seats</span>
                           </div>
                         </div>
                         <div style={{background:"#f0f8ff",border:"1px solid #0176D322",borderRadius:8,padding:"10px 12px",marginBottom:12}}>
@@ -1906,7 +1904,7 @@ export default function App() {
                   {/* Pie chart */}
                   <div style={{flex:"2 1 340px",minWidth:300,background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"22px",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
                     <div style={{fontSize:12,fontWeight:800,color:SF_NAVY,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:4}}>Space Group Breakdown</div>
-                    <div style={{fontSize:11,color:"#888",marginBottom:16}}>% of {bpcSfBase.toUpperCase()} · total = {bpcBaseSF.toLocaleString()} SF</div>
+                    <div style={{fontSize:11,color:SF_SUBTLE,marginBottom:16}}>% of {bpcSfBase.toUpperCase()} · total = {bpcBaseSF.toLocaleString()} SF</div>
                     <BpcPieChart segments={[
                       // Support SF is folded into the other groups: split evenly between
                       // Workspace and Amenity, or all into Workspace when there's no amenity.
@@ -1934,6 +1932,7 @@ export default function App() {
                   <div style={{fontSize:12,fontWeight:800,color:SF_NAVY,letterSpacing:"0.06em",textTransform:"uppercase",padding:"14px 22px",borderBottom:"1px solid #eee",background:"#fafafa"}}>
                     Summary
                   </div>
+                  <div style={{overflowX:"auto"}}>
                   <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
                     <tbody>
                       {[
@@ -1949,12 +1948,13 @@ export default function App() {
                         ["SF per Cap Seat", `${Math.round(bpcBaseSF/(bpcRes.capSeats||1))} SF`, false, false],
                       ].map(([label,val,bold,isBase],i)=>(
                         <tr key={i} style={{borderBottom:"1px solid #eee",background:bold?"#E8F4FD":isBase?"#EEF6FF":i%2===0?"#fff":"#fafbfc"}}>
-                          <td style={{padding:"10px 22px",color:bold?SF_NAVY:isBase?SF_BLUE:"#6B7280",fontWeight:bold||isBase?700:400}}>{label}</td>
-                          <td style={{padding:"10px 22px",textAlign:"right",fontWeight:bold?800:600,color:bold?SF_NAVY:"#1A1A2E",fontVariantNumeric:"tabular-nums"}}>{val}</td>
+                          <td style={{padding:"10px 16px",color:bold?SF_NAVY:isBase?SF_BLUE:SF_GRAY_700,fontWeight:bold||isBase?700:400}}>{label}</td>
+                          <td style={{padding:"10px 16px",textAlign:"right",fontWeight:bold?800:600,color:bold?SF_NAVY:"#1A1A2E",fontVariantNumeric:"tabular-nums"}}>{val}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2037,7 +2037,7 @@ export default function App() {
               <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"20px 24px",display:"flex",alignItems:"center",gap:12,boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
                 <div style={{flex:1}}>
                   <div style={{fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",fontSize:18,color:SF_NAVY,marginBottom:4}}>Design Comparison</div>
-                  <div style={{fontSize:12,color:"#888"}}>Download the template, fill in your actual space counts, then upload it to compare against the planned program.</div>
+                  <div style={{fontSize:12,color:SF_SUBTLE}}>Download the template, fill in your actual space counts, then upload it to compare against the planned program.</div>
                 </div>
                 <button onClick={handleDownloadTemplate}
                   style={{display:"flex",alignItems:"center",gap:8,padding:"9px 18px",borderRadius:8,border:"1px solid #ddd",background:"#fff",cursor:"pointer",fontSize:13,fontWeight:600,color:SF_NAVY,whiteSpace:"nowrap"}}>
@@ -2054,7 +2054,7 @@ export default function App() {
                 <div style={{background:"#fff",border:"2px dashed #ddd",borderRadius:12,padding:"48px 24px",textAlign:"center"}}>
                   <div style={{fontSize:32,marginBottom:12}}>📋</div>
                   <div style={{fontSize:16,color:SF_NAVY,fontWeight:600,marginBottom:8}}>No comparison data loaded</div>
-                  <div style={{fontSize:13,color:"#888",marginBottom:20}}>Download the template, fill in your actual space counts and seats, then upload it above.</div>
+                  <div style={{fontSize:13,color:SF_SUBTLE,marginBottom:20}}>Download the template, fill in your actual space counts and seats, then upload it above.</div>
                 </div>
               ) : (()=>{
                 // Build comparison rows
@@ -2091,9 +2091,9 @@ export default function App() {
                           totalDiff===0?"On target":totalDiff>0?"Over program":"Under program"],
                       ].map(([label,value,color,sub])=>(
                         <div key={label} style={{background:"#fff",border:`1px solid #e0e0e0`,borderTop:`3px solid ${color}`,borderRadius:10,padding:"18px 22px"}}>
-                          <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",color:"#888",textTransform:"uppercase",marginBottom:6}}>{label}</div>
+                          <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",color:SF_SUBTLE,textTransform:"uppercase",marginBottom:6}}>{label}</div>
                           <div style={{fontSize:30,fontWeight:800,color,lineHeight:1,fontVariantNumeric:"tabular-nums"}}>{value}</div>
-                          <div style={{fontSize:12,color:"#888",marginTop:6}}>{sub}</div>
+                          <div style={{fontSize:12,color:SF_SUBTLE,marginTop:6}}>{sub}</div>
                         </div>
                       ))}
                     </div>
@@ -2104,7 +2104,7 @@ export default function App() {
                         <thead>
                           <tr style={{background:"#fafafa",borderBottom:"2px solid #e0e0e0"}}>
                             {["Space Type","Group","Planned Spaces","Actual Spaces","Planned Seats","Actual Seats","Difference","% Over/Under"].map(h=>(
-                              <th key={h} style={{padding:"10px 14px",textAlign:h==="Space Type"||h==="Group"?"left":"center",fontSize:10,color:"#888",fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",whiteSpace:"nowrap"}}>{h}</th>
+                              <th key={h} style={{padding:"10px 14px",textAlign:h==="Space Type"||h==="Group"?"left":"center",fontSize:10,color:SF_SUBTLE,fontWeight:700,letterSpacing:"0.07em",textTransform:"uppercase",whiteSpace:"nowrap"}}>{h}</th>
                             ))}
                           </tr>
                         </thead>
@@ -2159,7 +2159,7 @@ export default function App() {
               <div style={{padding:"14px 20px",borderBottom:"1px solid #e0e0e0",background:"#fafafa",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
                 <div>
                   <span style={{fontFamily:"Inter, 'Salesforce Sans', Arial, sans-serif",fontSize:18,color:SF_NAVY}}>Allocation by Tier</span>
-                  <div style={{fontSize:11,color:"#888",marginTop:2}}>
+                  <div style={{fontSize:11,color:SF_SUBTLE,marginTop:2}}>
                     {tiersLocked
                       ? "Standard tier breakdowns. Unlock to customize."
                       : "Editing enabled — each group should total 100%. Changes apply to the selected tier."}
@@ -2168,7 +2168,7 @@ export default function App() {
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   {!tiersLocked && tiersModified && (
                     <button onClick={resetTiers}
-                      style={{padding:"7px 14px",borderRadius:8,border:"1px solid #ddd",background:"#fff",cursor:"pointer",fontSize:12,fontWeight:600,color:"#888",whiteSpace:"nowrap"}}>
+                      style={{padding:"7px 14px",borderRadius:8,border:"1px solid #ddd",background:"#fff",cursor:"pointer",fontSize:12,fontWeight:600,color:SF_SUBTLE,whiteSpace:"nowrap"}}>
                       ↺ Reset to defaults
                     </button>
                   )}
@@ -2183,8 +2183,8 @@ export default function App() {
               <div style={{overflowX:"auto"}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
                 <thead><tr>
-                  <th style={{padding:"8px 12px",textAlign:"left",fontSize:11,color:"#888",borderBottom:"1px solid #e0e0e0",background:"#f7f7f7"}}>Category</th>
-                  <th style={{padding:"8px 12px",textAlign:"left",fontSize:11,color:"#888",borderBottom:"1px solid #e0e0e0",background:"#f7f7f7"}}>Sub-%</th>
+                  <th style={{padding:"8px 12px",textAlign:"left",fontSize:11,color:SF_SUBTLE,borderBottom:"1px solid #e0e0e0",background:"#f7f7f7"}}>Category</th>
+                  <th style={{padding:"8px 12px",textAlign:"left",fontSize:11,color:SF_SUBTLE,borderBottom:"1px solid #e0e0e0",background:"#f7f7f7"}}>Sub-%</th>
                   {TIERS.map(t=><th key={t.id} style={{padding:"8px 12px",textAlign:"center",fontSize:11,borderBottom:"1px solid #e0e0e0",background:tierId===t.id?"#e8f4fd":"#f7f7f7",color:tierId===t.id?SF_BLUE:"#888"}}>{t.label}{tierId===t.id?" ★":""}</th>)}
                 </tr></thead>
                 <tbody>
@@ -2278,7 +2278,7 @@ export default function App() {
                   <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
                     <thead><tr>
                       {["Group","Space Type","Type","SF/Unit","Ratio","Count"].map(h=>(
-                        <th key={h} style={{padding:"8px 12px",textAlign:"left",fontSize:11,color:"#888",borderBottom:"1px solid #e0e0e0",background:"#f7f7f7"}}>{h}</th>
+                        <th key={h} style={{padding:"8px 12px",textAlign:"left",fontSize:11,color:SF_SUBTLE,borderBottom:"1px solid #e0e0e0",background:"#f7f7f7"}}>{h}</th>
                       ))}
                     </tr></thead>
                     <tbody>
